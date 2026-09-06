@@ -1,0 +1,81 @@
+{
+  "version": "0.1.0",
+  "backgrounds": {
+    "office-morning": {
+      "id": "office-morning",
+      "src": "/assets/backgrounds/office/morning.webp",
+      "focalPoint": "50% 45%"
+    },
+    "office-afternoon": {
+      "id": "office-afternoon",
+      "src": "/assets/backgrounds/office/afternoon.webp",
+      "focalPoint": "50% 45%"
+    },
+    "office-evening": {
+      "id": "office-evening",
+      "src": "/assets/backgrounds/office/evening.webp",
+      "focalPoint": "50% 45%"
+    },
+    "meeting-room": {
+      "id": "meeting-room",
+      "src": "/assets/backgrounds/meeting-room/normal.webp",
+      "focalPoint": "50% 40%"
+    },
+    "kitchen": {
+      "id": "kitchen",
+      "src": "/assets/backgrounds/kitchen/normal.webp",
+      "focalPoint": "50% 45%"
+    },
+    "coffee-area": {
+      "id": "coffee-area",
+      "src": "/assets/backgrounds/coffee-area/normal.webp",
+      "focalPoint": "50% 45%"
+    },
+    "lobby": {
+      "id": "lobby",
+      "src": "/assets/backgrounds/lobby/normal.webp",
+      "focalPoint": "50% 45%"
+    }
+  },
+  "characters": {
+    "emily": {
+      "id": "emily",
+      "name": "Emily",
+      "role": "PM",
+      "expressions": {
+        "neutral": "/assets/characters/emily/neutral.webp",
+        "happy": "/assets/characters/emily/happy.webp",
+        "surprised": "/assets/characters/emily/surprised.webp",
+        "concerned": "/assets/characters/emily/concerned.webp",
+        "thinking": "/assets/characters/emily/thinking.webp",
+        "talking": "/assets/characters/emily/talking.webp"
+      }
+    },
+    "daniel": {
+      "id": "daniel",
+      "name": "Daniel",
+      "role": "Backend Engineer",
+      "expressions": {
+        "neutral": "/assets/characters/daniel/neutral.webp",
+        "happy": "/assets/characters/daniel/happy.webp",
+        "surprised": "/assets/characters/daniel/surprised.webp",
+        "concerned": "/assets/characters/daniel/concerned.webp",
+        "thinking": "/assets/characters/daniel/thinking.webp",
+        "talking": "/assets/characters/daniel/talking.webp"
+      }
+    },
+    "priya": {
+      "id": "priya",
+      "name": "Priya",
+      "role": "Tech Lead",
+      "expressions": {
+        "neutral": "/assets/characters/priya/neutral.webp",
+        "happy": "/assets/characters/priya/happy.webp",
+        "surprised": "/assets/characters/priya/surprised.webp",
+        "concerned": "/assets/characters/priya/concerned.webp",
+        "thinking": "/assets/characters/priya/thinking.webp",
+        "talking": "/assets/characters/priya/talking.webp"
+      }
+    }
+  }
+}
