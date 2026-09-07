@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "principle": "Track language gaps, not everything the learner already knows.",
+  "priorities": [
+    "ignore",
+    "optional",
+    "useful",
+    "important",
+    "critical"
+  ],
+  "statuses": [
+    "needs_practice",
+    "developing",
+    "familiar",
+    "mastered"
+  ],
+  "gapTypes": [
+    "meaning",
+    "grammar",
+    "word_choice",
+    "sentence_pattern",
+    "naturalness",
+    "context",
+    "register"
+  ],
+  "evaluationRules": [
+    "Infer intended meaning before judging English.",
+    "Do not create a learning item when the expression is natural and context-appropriate.",
+    "Prefer the smallest useful correction.",
+    "Distinguish grammar errors from sentence-pattern gaps.",
+    "Consider workplace context, politeness, directness, and register.",
+    "One correct use is evidence of ability, not proof of mastery.",
+    "Repeated successful use across different contexts should increase mastery.",
+    "Do not teach vocabulary the player already demonstrates naturally unless there is a relevant usage gap."
+  ],
+  "recordSchema": {
+    "id": "string",
+    "concept": "string",
+    "userIntent": "string",
+    "userAttempt": "string",
+    "betterExpression": "string",
+    "gapType": "gapTypes",
+    "priority": "priorities",
+    "status": "statuses",
+    "confidence": "0..1",
+    "sourceLessons": "string[]",
+    "timesObserved": "integer",
+    "timesPracticed": "integer",
+    "timesUsedCorrectly": "integer",
+    "masteryEvidence": "evidence[]"
+  },
+  "masteryEvidenceSchema": {
+    "timestamp": "ISO-8601",
+    "context": "lesson/conversation",
+    "result": "incorrect|correct_after_hint|natural_spontaneous",
+    "expression": "string"
+  }
+}

@@ -37,8 +37,8 @@ export function HomePage() {
           <Button block onClick={() => navigate('/lessons')}>
             📚 Lessons
           </Button>
-          <Button block onClick={() => navigate('/phrases')}>
-            📓 Phrase Book
+          <Button block onClick={() => navigate('/my-english')}>
+            🗒️ My English
           </Button>
           <Button block onClick={() => navigate('/progress')}>
             📈 Progress

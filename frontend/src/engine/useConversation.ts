@@ -3,6 +3,7 @@ import { conversationService, ConversationError } from '../services/conversation
 import type {
   AiTurnResult,
   ConversationState,
+  LanguageGapObservation,
   Lesson,
   ResponseEvaluation,
 } from '../types';
@@ -14,8 +15,10 @@ export interface LessonSummary {
   xpEarned: number;
   turns: number;
   ratings: ResponseEvaluation['overall'][];
-  learnedPhraseIds: string[];
-  improvements: string[];
+  /** gaps surfaced this lesson (subset shown on the result screen) */
+  identifiedGaps: LanguageGapObservation[];
+  /** phrase-pattern ids the player used naturally */
+  patternsUsedNaturally: string[];
 }
 
 type Phase = 'loading' | 'ready' | 'sending' | 'complete' | 'error';
@@ -42,7 +45,6 @@ function buildSummary(
   lesson: Lesson,
   engine: ConversationEngine,
   ratings: ResponseEvaluation['overall'][],
-  improvements: string[],
 ): LessonSummary {
   const score =
     ratings.length === 0
@@ -58,15 +60,20 @@ function buildSummary(
     xpEarned: engine.state.xp,
     turns: engine.getProgress().playerTurns,
     ratings,
-    learnedPhraseIds: engine.state.learnedPhrases.map((p) => p.id),
-    improvements: [...new Set(improvements)].slice(0, 3),
+    identifiedGaps: engine.state.identifiedGaps,
+    patternsUsedNaturally: engine.state.patternsUsedNaturally,
   };
 }
 
-export function useConversation(lesson: Lesson): UseConversation {
+export function useConversation(
+  lesson: Lesson,
+  comfortableConcepts: string[],
+): UseConversation {
   const engineRef = useRef<ConversationEngine | null>(null);
   const ratingsRef = useRef<ResponseEvaluation['overall'][]>([]);
-  const improvementsRef = useRef<string[]>([]);
+  // captured once per boot so changing profile mid-lesson doesn't churn
+  const conceptsRef = useRef<string[]>(comfortableConcepts);
+  conceptsRef.current = comfortableConcepts;
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -80,13 +87,13 @@ export function useConversation(lesson: Lesson): UseConversation {
     setPhase('loading');
     setError(null);
     ratingsRef.current = [];
-    improvementsRef.current = [];
     setLastResult(null);
     setSummary(null);
     try {
       engineRef.current = await ConversationEngine.start(
         conversationService,
         lesson,
+        conceptsRef.current,
       );
       setPhase('ready');
       bump();
@@ -113,22 +120,10 @@ export function useConversation(lesson: Lesson): UseConversation {
       try {
         const result = await engine.send(message);
         ratingsRef.current.push(result.evaluation.overall);
-        if (result.learning.betterExpression && result.learning.shouldCorrect) {
-          improvementsRef.current.push(
-            `Try: “${result.learning.betterExpression}”`,
-          );
-        }
         setLastResult(result);
 
         if (engine.isComplete) {
-          setSummary(
-            buildSummary(
-              lesson,
-              engine,
-              ratingsRef.current,
-              improvementsRef.current,
-            ),
-          );
+          setSummary(buildSummary(lesson, engine, ratingsRef.current));
           setPhase('complete');
         } else {
           setPhase('ready');

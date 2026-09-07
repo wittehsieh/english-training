@@ -1,4 +1,5 @@
-import type { CharacterEmotion, TargetPhrase } from './lesson';
+import type { CharacterEmotion } from './lesson';
+import type { LanguageGapObservation, TurnLanguageAnalysis } from './learning';
 
 export type Speaker = 'character' | 'player';
 
@@ -20,7 +21,10 @@ export interface ConversationState {
   lessonId: string;
   turns: ConversationTurn[];
   objectives: ObjectiveState;
-  learnedPhrases: TargetPhrase[];
+  /** gap observations collected this conversation (deduped by concept) */
+  identifiedGaps: LanguageGapObservation[];
+  /** phrase-pattern ids the player used naturally this conversation */
+  patternsUsedNaturally: string[];
   xp: number;
   status: ConversationStatus;
 }
@@ -44,12 +48,12 @@ export type LearningFeedbackKind =
   | 'subtle'
   | 'correction'
   | 'explanation'
-  | 'phrase-learned';
+  | 'pattern-used';
 
+/** The tiny, optional coaching line shown under the dialogue. */
 export interface LearningFeedback {
   kind: LearningFeedbackKind;
-  shouldCorrect: boolean;
-  correction: string | null;
+  shouldShow: boolean;
   betterExpression: string | null;
   explanation: string | null;
 }
@@ -62,9 +66,11 @@ export interface CharacterResponse {
 export interface AiTurnResult {
   characterResponse: CharacterResponse;
   evaluation: ResponseEvaluation;
+  /** rich analysis matching learningModel.json — the future OpenAI output */
+  analysis: TurnLanguageAnalysis;
+  /** derived from `analysis`, for the subtle in-conversation UI */
   learning: LearningFeedback;
   objectiveProgress: Record<string, boolean>;
-  newPhrases: TargetPhrase[];
   lessonComplete: boolean;
   xpEarned: number;
 }
@@ -81,6 +87,12 @@ export interface SendMessageRequest {
   conversationId: string;
   lessonId: string;
   message: string;
+  /**
+   * Gap concepts the learner has already reached familiar/mastered on, so the
+   * evaluator can avoid re-teaching them. Client-owned for now; a real backend
+   * would eventually track this itself.
+   */
+  comfortableConcepts?: string[];
 }
 
 export interface ConversationTurnResponse {

@@ -35,8 +35,8 @@ function hydrate(stored: unknown): PlayerProfile {
     ...partial,
     settings: { ...DEFAULT_SETTINGS, ...(partial.settings ?? {}) },
     completedLessons: partial.completedLessons ?? [],
-    learnedPhrases: partial.learnedPhrases ?? [],
-    categoryProgress: partial.categoryProgress ?? {},
+    languageGaps: partial.languageGaps ?? [],
+    chapterProgress: partial.chapterProgress ?? {},
   };
 }
 

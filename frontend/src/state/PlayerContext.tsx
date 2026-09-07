@@ -9,27 +9,36 @@ import {
 } from 'react';
 import { storageService } from '../services/storage/StorageService';
 import {
+  gapKey,
+  isAlreadyComfortable,
+  recordGapObservation,
+  recordSuccessfulUse,
+} from '../engine/languageGap';
+import { getPhrasePattern } from '../data/curriculum';
+import {
   EMPTY_PROFILE,
   levelForXp,
   type CompletedLessonRecord,
-  type LearnedPhraseRecord,
   type PlayerProfile,
   type PlayerSettings,
-  type TargetPhrase,
+  type TurnLanguageAnalysis,
 } from '../types';
 
 export interface CompleteLessonInput {
   lessonId: string;
-  categoryId: string;
+  chapterId: string;
   score: number;
   xpEarned: number;
-  phrases: { phrase: TargetPhrase; sourceLessonId: string }[];
 }
 
 interface PlayerContextValue {
   profile: PlayerProfile;
   level: number;
+  /** gap concepts the learner no longer needs taught (familiar / mastered) */
+  comfortableConcepts: string[];
   isLessonCompleted: (lessonId: string) => boolean;
+  /** fold one evaluated turn into the Personal Language Gap store */
+  observeTurn: (analysis: TurnLanguageAnalysis, lessonId: string) => void;
   completeLesson: (input: CompleteLessonInput) => void;
   updateSettings: (patch: Partial<PlayerSettings>) => void;
   resetProgress: () => void;
@@ -52,35 +61,56 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     [profile.completedLessons],
   );
 
+  const observeTurn = useCallback(
+    (analysis: TurnLanguageAnalysis, lessonId: string) => {
+      setProfile((prev) => {
+        const now = new Date().toISOString();
+        let gaps = prev.languageGaps;
+
+        // 1. a real gap this turn -> create or reinforce a record
+        if (analysis.gap) {
+          gaps = recordGapObservation(gaps, analysis.gap, lessonId, now);
+        }
+
+        // 2. patterns used naturally -> mastery evidence *only* if we track a
+        //    matching gap; otherwise ignored (don't record known language)
+        for (const patternId of analysis.patternsUsedNaturally) {
+          const pattern = getPhrasePattern(patternId);
+          gaps = recordSuccessfulUse(
+            gaps,
+            { patternId, concept: pattern?.pattern },
+            pattern?.pattern ?? patternId,
+            lessonId,
+            now,
+          );
+        }
+
+        if (gaps === prev.languageGaps) return prev;
+        return { ...prev, languageGaps: gaps };
+      });
+    },
+    [],
+  );
+
   const completeLesson = useCallback((input: CompleteLessonInput) => {
     setProfile((prev) => {
       const alreadyDone = prev.completedLessons.some(
         (l) => l.lessonId === input.lessonId,
       );
-      const now = new Date().toISOString();
-
       const record: CompletedLessonRecord = {
         lessonId: input.lessonId,
         score: input.score,
         xpEarned: input.xpEarned,
-        completedAt: now,
+        completedAt: new Date().toISOString(),
       };
 
-      const learnedPhrases: LearnedPhraseRecord[] = [...prev.learnedPhrases];
-      for (const { phrase, sourceLessonId } of input.phrases) {
-        if (!learnedPhrases.some((p) => p.id === phrase.id)) {
-          learnedPhrases.push({ ...phrase, sourceLessonId, learnedAt: now });
-        }
-      }
-
-      const categoryProgress = { ...prev.categoryProgress };
+      const chapterProgress = { ...prev.chapterProgress };
       if (!alreadyDone) {
-        categoryProgress[input.categoryId] =
-          (categoryProgress[input.categoryId] ?? 0) + 1;
+        chapterProgress[input.chapterId] =
+          (chapterProgress[input.chapterId] ?? 0) + 1;
       }
 
       const xp = prev.xp + input.xpEarned;
-
       return {
         ...prev,
         xp,
@@ -90,8 +120,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
               l.lessonId === input.lessonId ? record : l,
             )
           : [...prev.completedLessons, record],
-        learnedPhrases,
-        categoryProgress,
+        chapterProgress,
       };
     });
   }, []);
@@ -108,16 +137,39 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setProfile({ ...EMPTY_PROFILE });
   }, []);
 
+  const comfortableConcepts = useMemo(
+    () =>
+      profile.languageGaps
+        .filter((g) => isAlreadyComfortable(g.status))
+        .map((g) => g.concept)
+        .concat(
+          profile.languageGaps
+            .filter((g) => isAlreadyComfortable(g.status))
+            .map((g) => gapKey(g.concept)),
+        ),
+    [profile.languageGaps],
+  );
+
   const value = useMemo<PlayerContextValue>(
     () => ({
       profile,
       level: levelForXp(profile.xp),
+      comfortableConcepts,
       isLessonCompleted,
+      observeTurn,
       completeLesson,
       updateSettings,
       resetProgress,
     }),
-    [profile, isLessonCompleted, completeLesson, updateSettings, resetProgress],
+    [
+      profile,
+      comfortableConcepts,
+      isLessonCompleted,
+      observeTurn,
+      completeLesson,
+      updateSettings,
+      resetProgress,
+    ],
   );
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>;

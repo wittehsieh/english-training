@@ -1,35 +1,26 @@
 import type { CharacterExpression, CharacterPosition } from './assets';
+import type { CurriculumDifficulty, TargetExpression } from './curriculum';
 
 /**
- * Lesson content is 100% data-driven — see `src/data/lessons.json`.
+ * The RUNTIME lesson shape the game plays.
  *
- * A lesson describes WHAT to teach (objectives + target phrases + an opening
- * line) and WHICH assets to show (by id — never by file path). It deliberately
- * does NOT script the player's replies; the conversation is generated
- * turn-by-turn by a ConversationService.
+ * It is built by `src/data/curriculum.ts` from the raw curriculum JSON plus a
+ * deterministic presentation layer (scene + character + opening line). Lesson
+ * content is never hard-coded in components.
+ *
+ * `targetExpressions` are AI guidance, NOT answer keys — the player replies in
+ * free-form English and any response that communicates the intent is accepted.
  */
 
-export type LessonCategoryId =
-  | 'small_talk'
-  | 'project_update'
-  | 'pm_tpm'
-  | 'ux_discussion'
-  | 'engineering'
-  | 'meetings'
-  | 'planning'
-  | 'manager_1_1'
-  | 'real_world';
+export type Difficulty = CurriculumDifficulty;
 
-export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
-
-/** Alias kept for conversation code; expressions ARE the emotion set. */
+/** Expressions ARE the emotion set (see assets.ts). */
 export type CharacterEmotion = CharacterExpression;
 
 export interface LessonScene {
   id: string;
   /** Background asset id — resolved to a URL by AssetManager. */
   background: string;
-  /** Optional per-lesson focal point override, e.g. "50% 40%". */
   backgroundPosition?: string;
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
 }
@@ -40,7 +31,6 @@ export interface LessonCharacter {
   name: string;
   role: string;
   personality: string[];
-  /** Expression to show at the start of the lesson. */
   expression?: CharacterExpression;
   position?: CharacterPosition;
 }
@@ -48,15 +38,6 @@ export interface LessonCharacter {
 export interface LearningObjective {
   id: string;
   description: string;
-}
-
-export interface TargetPhrase {
-  id: string;
-  phrase: string;
-  /** Short meaning, may be in the learner's first language. */
-  meaning: string;
-  usage: string;
-  example?: string;
 }
 
 export interface ConversationOpening {
@@ -72,29 +53,28 @@ export interface CompletionCriteria {
 
 export interface Lesson {
   id: string;
-  category: LessonCategoryId;
+  chapterId: string;
+  chapterTitle: string;
   title: string;
+  /** player-facing goal, from the curriculum */
+  mission: string;
   description: string;
   difficulty: Difficulty;
   estimatedMinutes: number;
+  xp: number;
   scene: LessonScene;
   characters: LessonCharacter[];
   learningObjectives: LearningObjective[];
-  targetPhrases: TargetPhrase[];
+  targetExpressions: TargetExpression[];
   conversation: {
     opening: ConversationOpening;
   };
   completionCriteria: CompletionCriteria;
 }
 
-export interface LessonCategory {
-  id: LessonCategoryId;
-  name: string;
+export interface LessonChapter {
+  id: string;
+  title: string;
   icon: string;
-}
-
-export interface LessonData {
-  version: string;
-  categories: LessonCategory[];
   lessons: Lesson[];
 }

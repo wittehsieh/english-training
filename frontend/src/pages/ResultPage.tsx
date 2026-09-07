@@ -1,6 +1,6 @@
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/common/Button';
-import { getLesson } from '../data/lessons';
+import { getLesson, getPhrasePattern } from '../data/curriculum';
 import type { LessonSummary } from '../engine/useConversation';
 import { usePlayer } from '../state/PlayerContext';
 
@@ -19,9 +19,9 @@ export function ResultPage() {
     return <Navigate to={`/lesson/${lesson.id}`} replace />;
   }
 
-  const learnedPhrases = lesson.targetPhrases.filter((p) =>
-    summary.learnedPhraseIds.includes(p.id),
-  );
+  const patterns = [...new Set(summary.patternsUsedNaturally)]
+    .map((id) => getPhrasePattern(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
   const grade =
     summary.score >= 85 ? 'Excellent' : summary.score >= 65 ? 'Solid' : 'Keep practising';
 
@@ -51,34 +51,36 @@ export function ResultPage() {
         </div>
       </div>
 
-      {learnedPhrases.length ? (
+      {patterns.length ? (
         <div className="card" style={{ marginTop: 16 }}>
-          <h2 style={{ fontSize: 16 }}>Phrases you used well</h2>
+          <h2 style={{ fontSize: 16 }}>Patterns you used naturally</h2>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {learnedPhrases.map((p) => (
+            {patterns.map((p) => (
               <li key={p.id} style={{ marginBottom: 6 }}>
-                <b>{p.phrase}</b>
-                <span className="faint"> — {p.meaning}</span>
+                <b>{p.pattern}</b>
               </li>
             ))}
           </ul>
         </div>
       ) : null}
 
-      {summary.improvements.length ? (
+      {summary.identifiedGaps.length ? (
         <div className="card" style={{ marginTop: 16 }}>
-          <h2 style={{ fontSize: 16 }}>Suggested improvements</h2>
+          <h2 style={{ fontSize: 16 }}>Added to “My English”</h2>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {summary.improvements.map((tip) => (
-              <li key={tip} style={{ marginBottom: 6 }}>
-                {tip}
+            {summary.identifiedGaps.map((gap) => (
+              <li key={gap.concept} style={{ marginBottom: 10 }}>
+                <b>{gap.concept}</b>
+                <br />
+                <span className="faint">you said “{gap.userAttempt}” → </span>
+                “{gap.betterExpression}”
               </li>
             ))}
           </ul>
         </div>
       ) : (
         <p className="muted" style={{ marginTop: 16 }}>
-          No big corrections this time — your English got the job done.
+          No new language gaps this time — you said what you meant.
         </p>
       )}
 

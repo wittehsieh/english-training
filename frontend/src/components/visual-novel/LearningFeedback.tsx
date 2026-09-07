@@ -2,35 +2,25 @@ import type { LearningFeedback as LearningFeedbackData } from '../../types';
 
 interface LearningFeedbackProps {
   feedback: LearningFeedbackData;
-  /** Player can silence hints in Settings. */
+  /** player can silence hints in Settings */
   enabled: boolean;
 }
 
 /**
- * Deliberately quiet. Shows at most one line of coaching and only when the
- * mock/AI decided it was worth it (`kind !== 'none'`).
+ * Deliberately quiet. One line, and only when the evaluator decided it was
+ * worth saying (`shouldShow`). It should never feel like a teacher interrupting
+ * every turn.
  */
 export function LearningFeedback({ feedback, enabled }: LearningFeedbackProps) {
-  if (!enabled) return null;
-  if (feedback.kind === 'none') return null;
-
-  const icon =
-    feedback.kind === 'phrase-learned'
-      ? '📎'
-      : feedback.kind === 'correction'
-        ? '💡'
-        : 'ℹ️';
-
-  const lead =
-    feedback.kind === 'phrase-learned' ? 'Phrase added' : 'More natural';
+  if (!enabled || !feedback.shouldShow || feedback.kind === 'none') return null;
 
   return (
     <div className={`learn learn--${feedback.kind}`} role="note">
-      <span aria-hidden="true">{icon}</span>
+      <span aria-hidden="true">💡</span>
       <span>
         {feedback.betterExpression ? (
           <>
-            <span className="faint">{lead}: </span>
+            <span className="faint">More natural: </span>
             <span className="learn__better">“{feedback.betterExpression}”</span>
           </>
         ) : null}

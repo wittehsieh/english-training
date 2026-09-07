@@ -1,0 +1,450 @@
+{
+  "version": "1.0",
+  "designPrinciple": "Target expressions are AI guidance, not answer keys. Player responses are free-form.",
+  "chapters": [
+    {
+      "id": "everyday-office",
+      "title": "Everyday Office",
+      "lessons": [
+        {
+          "id": "office-01",
+          "title": "Monday Morning",
+          "mission": "Have a natural Monday-morning conversation and mention what you are working on today.",
+          "learningObjectives": [
+            "greet_coworker",
+            "small_talk",
+            "describe_current_work",
+            "describe_today_plan"
+          ],
+          "targetExpressions": [
+            "How's it going?",
+            "How was your weekend?",
+            "What are you working on today?",
+            "I'm working on...",
+            "I'm planning to...",
+            "I'm hoping to...",
+            "I should be able to..."
+          ],
+          "difficulty": "easy",
+          "xp": 20
+        },
+        {
+          "id": "office-02",
+          "title": "Weekend Talk",
+          "mission": "Talk about your weekend and keep the conversation going with a follow-up question.",
+          "learningObjectives": [
+            "talk_about_past_events",
+            "ask_follow_up",
+            "show_interest",
+            "keep_conversation_going"
+          ],
+          "targetExpressions": [
+            "I went to...",
+            "I spent most of the weekend...",
+            "I ended up...",
+            "It was pretty fun.",
+            "What about you?",
+            "How about you?",
+            "Did you...?"
+          ],
+          "difficulty": "easy",
+          "xp": 20
+        },
+        {
+          "id": "office-03",
+          "title": "Coffee Break",
+          "mission": "Have a short casual conversation with a coworker during a coffee break.",
+          "learningObjectives": [
+            "start_small_talk",
+            "respond_casually",
+            "ask_follow_up",
+            "end_conversation_naturally"
+          ],
+          "targetExpressions": [
+            "How's your day going?",
+            "Busy morning?",
+            "It's been pretty hectic.",
+            "Not too bad.",
+            "I've been...",
+            "Anyway, I should get back to..."
+          ],
+          "difficulty": "easy",
+          "xp": 20
+        },
+        {
+          "id": "office-04",
+          "title": "What Are You Working On?",
+          "mission": "Explain your current work to a coworker in a simple, natural way.",
+          "learningObjectives": [
+            "describe_work",
+            "explain_current_task",
+            "give_context"
+          ],
+          "targetExpressions": [
+            "I'm working on...",
+            "I'm mainly responsible for...",
+            "I've been working on...",
+            "I'm trying to...",
+            "I'm currently looking into..."
+          ],
+          "difficulty": "easy",
+          "xp": 20
+        },
+        {
+          "id": "office-05",
+          "title": "Today's Plan",
+          "mission": "Explain what you plan to accomplish today and how certain you are about it.",
+          "learningObjectives": [
+            "describe_plan",
+            "express_intention",
+            "express_uncertainty"
+          ],
+          "targetExpressions": [
+            "I'm planning to...",
+            "I'm going to...",
+            "I need to...",
+            "I'm hoping to...",
+            "If everything goes well..."
+          ],
+          "difficulty": "easy",
+          "xp": 20
+        },
+        {
+          "id": "office-06",
+          "title": "Running Into a Coworker",
+          "mission": "Keep an unexpected hallway conversation going for several exchanges.",
+          "learningObjectives": [
+            "respond_spontaneously",
+            "ask_follow_up",
+            "maintain_conversation",
+            "close_conversation"
+          ],
+          "targetExpressions": [
+            "How have you been?",
+            "What have you been up to?",
+            "That sounds nice.",
+            "How about you?",
+            "I've been meaning to..."
+          ],
+          "difficulty": "easy",
+          "xp": 25
+        },
+        {
+          "id": "office-07",
+          "title": "Are You Free?",
+          "mission": "Ask a coworker for time to discuss something without sounding demanding.",
+          "learningObjectives": [
+            "ask_availability",
+            "choose_politeness_level",
+            "suggest_time"
+          ],
+          "targetExpressions": [
+            "Are you free for a minute?",
+            "Do you have a minute?",
+            "Do you have a few minutes?",
+            "Are you available sometime today?",
+            "When would be a good time to talk?"
+          ],
+          "difficulty": "medium",
+          "xp": 25
+        },
+        {
+          "id": "office-08",
+          "title": "Let's Talk Later",
+          "mission": "Tell a coworker you are busy while keeping the interaction friendly.",
+          "learningObjectives": [
+            "decline_temporarily",
+            "give_reason",
+            "suggest_follow_up"
+          ],
+          "targetExpressions": [
+            "I'm a little busy right now.",
+            "Can we talk later?",
+            "Can we catch up later?",
+            "I'll get back to you.",
+            "Let me finish this first."
+          ],
+          "difficulty": "medium",
+          "xp": 25
+        },
+        {
+          "id": "office-09",
+          "title": "Introducing Yourself",
+          "mission": "Give a concise professional introduction in a new cross-functional project.",
+          "learningObjectives": [
+            "introduce_self",
+            "describe_role",
+            "describe_responsibility"
+          ],
+          "targetExpressions": [
+            "I'm an engineer on...",
+            "I mainly work on...",
+            "I've been working on...",
+            "I'm part of the...",
+            "I'll be working closely with..."
+          ],
+          "difficulty": "medium",
+          "xp": 25
+        },
+        {
+          "id": "office-10",
+          "title": "New Coworker",
+          "mission": "Meet a new coworker, learn what they do, and find a natural connection.",
+          "learningObjectives": [
+            "introduce_self",
+            "ask_about_role",
+            "find_common_ground",
+            "close_conversation"
+          ],
+          "targetExpressions": [
+            "What do you work on?",
+            "What team are you on?",
+            "How long have you been...?",
+            "I'll probably be working with you on...",
+            "Nice meeting you."
+          ],
+          "difficulty": "medium",
+          "xp": 25
+        }
+      ]
+    },
+    {
+      "id": "project-communication",
+      "title": "Project Communication",
+      "lessons": [
+        {
+          "id": "project-01",
+          "title": "Project Update",
+          "mission": "Give a concise update covering progress, current work, blockers, and timeline.",
+          "learningObjectives": [
+            "describe_progress",
+            "describe_current_work",
+            "explain_blocker",
+            "give_timeline"
+          ],
+          "targetExpressions": [
+            "It's going pretty well.",
+            "I'm almost done with...",
+            "I'm still working on...",
+            "I'm waiting for...",
+            "I should have it done by...",
+            "I'm aiming for..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-02",
+          "title": "Status Check",
+          "mission": "Answer a status question with what is done, what remains, and what happens next.",
+          "learningObjectives": [
+            "summarize_status",
+            "describe_remaining_work",
+            "describe_next_step"
+          ],
+          "targetExpressions": [
+            "It's mostly done.",
+            "The main part is done.",
+            "I'm still working on...",
+            "What's left is...",
+            "The next step is..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-03",
+          "title": "Explaining Your Work",
+          "mission": "Walk a coworker through what you have done so far in a clear sequence.",
+          "learningObjectives": [
+            "explain_process",
+            "sequence_steps",
+            "give_context"
+          ],
+          "targetExpressions": [
+            "First...",
+            "Then...",
+            "After that...",
+            "The main part is...",
+            "The remaining work is...",
+            "So basically..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-04",
+          "title": "Project Blocker",
+          "mission": "Explain a blocker, its cause, and its impact on your work.",
+          "learningObjectives": [
+            "identify_blocker",
+            "explain_cause",
+            "explain_impact"
+          ],
+          "targetExpressions": [
+            "I'm blocked by...",
+            "I'm waiting for...",
+            "I need ... before I can...",
+            "The issue is...",
+            "This is holding up..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-05",
+          "title": "Asking for Help",
+          "mission": "Ask a coworker for specific help while giving enough context.",
+          "learningObjectives": [
+            "ask_for_help",
+            "give_context",
+            "make_specific_request"
+          ],
+          "targetExpressions": [
+            "Could you take a look at...?",
+            "Could you help me with...?",
+            "Do you mind taking a look?",
+            "Would you have some time to...?",
+            "I could use some help with..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-06",
+          "title": "Giving an ETA",
+          "mission": "Give a completion estimate and communicate uncertainty when appropriate.",
+          "learningObjectives": [
+            "give_eta",
+            "express_confidence",
+            "express_uncertainty"
+          ],
+          "targetExpressions": [
+            "I should have it done by Friday.",
+            "I think I can finish it this week.",
+            "I'm aiming for Friday.",
+            "It might take a little longer.",
+            "I'll have a better estimate by..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-07",
+          "title": "Running Behind",
+          "mission": "Explain that work is behind schedule and communicate a revised expectation.",
+          "learningObjectives": [
+            "report_delay",
+            "explain_reason",
+            "revise_timeline"
+          ],
+          "targetExpressions": [
+            "We're a little behind schedule.",
+            "It's taking longer than expected.",
+            "We ran into an issue.",
+            "We may need to push it back.",
+            "I think we can still make it by..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-08",
+          "title": "Changing the Timeline",
+          "mission": "Discuss how a changed deadline affects scope, priorities, and your work.",
+          "learningObjectives": [
+            "discuss_impact",
+            "negotiate_timeline",
+            "discuss_tradeoff"
+          ],
+          "targetExpressions": [
+            "How does that affect...?",
+            "We may need to...",
+            "We could push ... to later.",
+            "If we want to keep the deadline...",
+            "One option would be to..."
+          ],
+          "difficulty": "hard",
+          "xp": 40
+        },
+        {
+          "id": "project-09",
+          "title": "Reporting a Problem",
+          "mission": "Report a bug or issue clearly enough for another person to understand the impact.",
+          "learningObjectives": [
+            "describe_problem",
+            "describe_reproduction",
+            "describe_impact"
+          ],
+          "targetExpressions": [
+            "I'm seeing an issue with...",
+            "It happens when...",
+            "I can reproduce it by...",
+            "It doesn't happen every time.",
+            "The impact is..."
+          ],
+          "difficulty": "medium",
+          "xp": 35
+        },
+        {
+          "id": "project-10",
+          "title": "Explaining the Cause",
+          "mission": "Explain what you know about the likely cause of a problem without overstating certainty.",
+          "learningObjectives": [
+            "describe_cause",
+            "express_evidence",
+            "express_uncertainty"
+          ],
+          "targetExpressions": [
+            "It looks like...",
+            "It seems to be related to...",
+            "I noticed that...",
+            "The issue appears to happen when...",
+            "I'm not completely sure yet."
+          ],
+          "difficulty": "hard",
+          "xp": 40
+        },
+        {
+          "id": "project-11",
+          "title": "Proposing a Solution",
+          "mission": "Suggest a solution and discuss alternatives without sounding overly forceful.",
+          "learningObjectives": [
+            "propose_solution",
+            "compare_options",
+            "soften_suggestion"
+          ],
+          "targetExpressions": [
+            "I think we could...",
+            "Maybe we should...",
+            "One option would be to...",
+            "What if we...?",
+            "Another approach would be..."
+          ],
+          "difficulty": "hard",
+          "xp": 40
+        },
+        {
+          "id": "project-12",
+          "title": "Following Up",
+          "mission": "Follow up on a pending item, ask for an update, and explain why you need it.",
+          "learningObjectives": [
+            "follow_up",
+            "ask_status",
+            "explain_dependency",
+            "stay_polite"
+          ],
+          "targetExpressions": [
+            "I just wanted to follow up on...",
+            "Do you have an update on...?",
+            "Any update on...?",
+            "I need it before I can...",
+            "No rush, but..."
+          ],
+          "difficulty": "hard",
+          "xp": 40
+        }
+      ]
+    }
+  ]
+}

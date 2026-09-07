@@ -1,0 +1,91 @@
+{
+  "version": "1.0",
+  "description": "Reusable language patterns; guidance for AI, never exact answer keys.",
+  "patterns": [
+    {
+      "id": "by-deadline",
+      "pattern": "by + time/deadline",
+      "examples": [
+        "I can finish it by Friday.",
+        "I should have it done by tomorrow."
+      ],
+      "category": "timeline"
+    },
+    {
+      "id": "wait-for",
+      "pattern": "wait for + thing/person",
+      "examples": [
+        "I'm waiting for the UX feedback.",
+        "I'm waiting for Alex."
+      ],
+      "category": "blocker"
+    },
+    {
+      "id": "working-on",
+      "pattern": "work on + thing",
+      "examples": [
+        "I'm working on the UI.",
+        "I'm still working on it."
+      ],
+      "category": "progress"
+    },
+    {
+      "id": "make-sure-clause",
+      "pattern": "make sure + clause",
+      "examples": [
+        "I want to make sure I understand the requirement."
+      ],
+      "category": "clarification"
+    },
+    {
+      "id": "explain-to",
+      "pattern": "explain + thing + to + person",
+      "examples": [
+        "Can you explain this to me?"
+      ],
+      "category": "clarification"
+    },
+    {
+      "id": "aiming-for",
+      "pattern": "aiming for + target",
+      "examples": [
+        "I'm aiming for Friday.",
+        "We're aiming for the end of the week."
+      ],
+      "category": "timeline"
+    },
+    {
+      "id": "take-a-look-at",
+      "pattern": "take a look at + thing",
+      "examples": [
+        "Could you take a look at this?",
+        "Do you mind taking a look at the PR?"
+      ],
+      "category": "asking_help"
+    },
+    {
+      "id": "it-looks-like",
+      "pattern": "It looks like + clause",
+      "examples": [
+        "It looks like the issue is related to the animation."
+      ],
+      "category": "technical_explanation"
+    },
+    {
+      "id": "one-option",
+      "pattern": "One option would be to + verb",
+      "examples": [
+        "One option would be to push the feature to the next release."
+      ],
+      "category": "suggestion"
+    },
+    {
+      "id": "follow-up-on",
+      "pattern": "follow up on + topic",
+      "examples": [
+        "I wanted to follow up on the design feedback."
+      ],
+      "category": "follow_up"
+    }
+  ]
+}

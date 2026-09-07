@@ -1,214 +1,316 @@
 import type {
   AiTurnResult,
   CharacterEmotion,
+  GapType,
+  GapPriority,
   Lesson,
   LearningFeedback,
+  LanguageGapObservation,
   ResponseEvaluation,
-  TargetPhrase,
+  TurnLanguageAnalysis,
 } from '../../types';
+import { PHRASE_PATTERNS } from '../../data/curriculum';
 
 /* ==========================================================================
- * mockBrain — a deliberately simple, rule-based stand-in for the future
- * OpenAI-powered evaluator. It is NOT meant to be smart; it exists so the
- * whole game loop can be built and tested without a network or an API key.
+ * mockBrain — a rule-based stand-in for the future OpenAI evaluator.
  *
- * Everything in this file is throw-away once `OpenAIConversationService`
- * lands on the backend.
+ * It follows the learningModel.json contract:
+ *   1. infer intent first
+ *   2. judge whether the meaning was communicated
+ *   3. only surface a gap when the English genuinely fell short
+ *   4. never require the lesson's target expressions verbatim
+ *   5. don't re-teach concepts the player is already comfortable with
+ *
+ * Everything here is throw-away once OpenAIConversationService lands.
  * ======================================================================== */
 
 export interface BrainInput {
   lesson: Lesson;
   playerMessage: string;
-  /** objective ids already completed before this turn */
   completedObjectiveIds: string[];
-  /** number of player turns taken so far (including this one) */
   playerTurnNumber: number;
+  /** gap concepts the player has reached "familiar"/"mastered" on */
+  comfortableConcepts: string[];
 }
 
-const COMMON_ESL_PATTERNS: { test: RegExp; better: string; note: string }[] = [
+interface GapRule {
+  id: string;
+  concept: string;
+  patternId?: string;
+  gapType: GapType;
+  priority: GapPriority;
+  test: RegExp;
+  /** guard: don't fire if this also matches (already correct) */
+  unless?: RegExp;
+  better: (message: string) => string;
+  explanation: string;
+}
+
+const GAP_RULES: GapRule[] = [
   {
-    test: /\bi\s+wait(ing)?\s+(for\s+)?/i,
-    better: "I'm still waiting for the latest UX feedback.",
-    note: 'Use "I\'m waiting for ..." — the verb needs "am" and the preposition "for".',
+    id: 'wait-for',
+    concept: 'wait for + thing/person',
+    patternId: 'wait-for',
+    gapType: 'sentence_pattern',
+    priority: 'important',
+    test: /\bwait(ing)?\s+(the|a|my|your|his|her|their|it|feedback|him|them|response|reply|review)\b/i,
+    unless: /\bwait(ing)?\s+for\b/i,
+    better: (m) =>
+      m.replace(/\bwait(ing)?\s+/i, (s) => s.replace(/\s+$/, '') + ' for '),
+    explanation: 'In English you "wait for" something — the preposition is required.',
   },
   {
-    test: /\bi\s+almost\s+finish\b/i,
-    better: "I'm almost finished with it.",
-    note: 'For something nearly complete, say "I\'m almost finished/done with it."',
+    id: 'by-deadline',
+    concept: 'by + deadline (not "until")',
+    patternId: 'by-deadline',
+    gapType: 'word_choice',
+    priority: 'important',
+    test: /\b(finish|done|ready|complete|have it done)\b[^.]*\buntil\b/i,
+    better: (m) => m.replace(/\buntil\b/i, 'by'),
+    explanation: 'For a completion deadline use "by Friday", not "until Friday".',
   },
   {
-    test: /\bcan\s+finish\s+until\b/i,
-    better: 'I should have it done by Friday.',
-    note: 'For a deadline use "by Friday", not "until Friday".',
+    id: 'almost-done',
+    concept: 'be + almost done/finished',
+    gapType: 'grammar',
+    priority: 'useful',
+    test: /\bi\s+almost\s+(finish|finished|done|complete)\b/i,
+    better: () => "I'm almost done with it.",
+    explanation: 'Use "I\'m almost done/finished with it" for something nearly complete.',
   },
   {
-    test: /\bno\s+blocker\b/i,
-    better: 'Nothing major at the moment.',
-    note: '"Nothing major at the moment" sounds more natural than "no blocker".',
+    id: 'blocked-on',
+    concept: 'be blocked on/by + thing',
+    gapType: 'grammar',
+    priority: 'useful',
+    test: /\bi\s+(am\s+)?block(ed)?\s+(in|at|on the|by the)?\b/i,
+    unless: /\bi'?m\s+blocked\s+(on|by)\b/i,
+    better: () => "I'm blocked on the staging environment.",
+    explanation: 'Say "I\'m blocked on X" (or "blocked by X") to name what is stopping you.',
   },
   {
-    test: /\bi\s+am\s+block\b/i,
-    better: "I'm blocked on the staging database.",
-    note: 'Say "I\'m blocked on X" to name what is stopping you.',
+    id: 'discuss-no-about',
+    concept: 'discuss + thing (no "about")',
+    gapType: 'word_choice',
+    priority: 'optional',
+    test: /\bdiscuss\s+about\b/i,
+    better: (m) => m.replace(/\bdiscuss\s+about\b/i, 'discuss'),
+    explanation: '"Discuss" already means "talk about" — drop "about".',
+  },
+  {
+    id: 'responsible-for',
+    concept: "be responsible for + thing",
+    gapType: 'grammar',
+    priority: 'useful',
+    test: /\bi\s+responsible\s+for\b/i,
+    better: (m) => m.replace(/\bi\s+responsible\b/i, "I'm responsible"),
+    explanation: 'Needs the verb "be": "I\'m responsible for ...".',
+  },
+  {
+    id: 'explain-to',
+    concept: 'explain + thing + to + person',
+    patternId: 'explain-to',
+    gapType: 'sentence_pattern',
+    priority: 'useful',
+    test: /\bexplain\s+me\b/i,
+    better: (m) => m.replace(/\bexplain\s+me\b/i, 'explain it to me'),
+    explanation: 'It\'s "explain something to someone" — "explain it to me".',
   },
 ];
 
-function wordCount(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
+const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+
+/** Rough intent inference: keyword buckets, else the current open objective. */
+function inferIntent(message: string, openObjectiveDesc: string): string {
+  const m = message.toLowerCase();
+  if (/\bweekend|saturday|sunday\b/.test(m)) return 'talk about your weekend';
+  if (/\bwait|block|stuck|depend/.test(m)) return 'explain what is blocking your progress';
+  if (/\bfriday|monday|tomorrow|by |eta|deadline|week\b/.test(m))
+    return 'give a timeline for finishing the work';
+  if (/\bworking on|work on|building|implement/.test(m))
+    return 'say what you are currently working on';
+  if (/\bhelp|take a look|could you|would you\b/.test(m)) return 'ask a coworker for help';
+  if (/\bsorry|behind|late|slip|longer than\b/.test(m))
+    return 'let them know the work is running late';
+  if (/\bi think we|we could|one option|maybe we should\b/.test(m))
+    return 'propose a solution or option';
+  return openObjectiveDesc.toLowerCase();
 }
 
-function usesTargetPhrase(message: string, phrases: TargetPhrase[]): TargetPhrase | null {
-  const normalized = message.toLowerCase();
-  for (const phrase of phrases) {
-    const keywords = phrase.phrase
-      .toLowerCase()
-      .replace(/[^a-z\s]/g, '')
-      .split(/\s+/)
-      .filter((w) => w.length > 3);
-    if (keywords.length === 0) continue;
-    const hits = keywords.filter((w) => normalized.includes(w)).length;
-    if (hits / keywords.length >= 0.6) return phrase;
+function detectNaturalPatterns(message: string, excludePatternId: string | undefined): string[] {
+  const lower = message.toLowerCase();
+  const used: string[] = [];
+  for (const p of PHRASE_PATTERNS) {
+    if (p.id === excludePatternId) continue;
+    const head = p.pattern.split('+')[0]!.trim().toLowerCase();
+    if (head.length < 2) continue;
+    const re = new RegExp(`\\b${head.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (re.test(lower)) used.push(p.id);
   }
-  return null;
+  return [...new Set(used)];
 }
 
-function evaluate(
-  message: string,
-  matchedError: (typeof COMMON_ESL_PATTERNS)[number] | undefined,
-  usedPhrase: TargetPhrase | null,
-): ResponseEvaluation {
-  const words = wordCount(message);
-  const meaningCorrect = words >= 3;
-  const grammar: ResponseEvaluation['grammar'] = matchedError
-    ? 'ok'
-    : words >= 3
-      ? 'good'
-      : 'ok';
-  const hasContraction = /\b\w+'\w+\b/.test(message);
-  const naturalness: ResponseEvaluation['naturalness'] = usedPhrase
-    ? 'natural'
-    : matchedError
-      ? 'ok'
-      : hasContraction && words >= 4
-        ? 'natural'
-        : 'ok';
-
-  let overall: ResponseEvaluation['overall'] = 'ok';
-  if (words < 2) overall = 'poor';
-  else if (usedPhrase) overall = 'excellent';
-  else if (grammar === 'good' && naturalness === 'natural') overall = 'excellent';
-  else if (grammar === 'good') overall = 'good';
-
-  return { overall, meaningCorrect, grammar, naturalness };
-}
-
-function buildFeedback(
-  matchedError: (typeof COMMON_ESL_PATTERNS)[number] | undefined,
-  usedPhrase: TargetPhrase | null,
-): LearningFeedback {
-  if (usedPhrase) {
-    return {
-      kind: 'phrase-learned',
-      shouldCorrect: false,
-      correction: null,
-      betterExpression: usedPhrase.phrase,
-      explanation: usedPhrase.usage,
-    };
-  }
-  if (matchedError) {
-    return {
-      kind: 'correction',
-      shouldCorrect: true,
-      correction: null,
-      betterExpression: matchedError.better,
-      explanation: matchedError.note,
-    };
-  }
-  return {
-    kind: 'none',
-    shouldCorrect: false,
-    correction: null,
-    betterExpression: null,
-    explanation: null,
-  };
-}
-
-const ACK_BY_RATING: Record<ResponseEvaluation['overall'], string[]> = {
-  excellent: ['Nice, that’s exactly it.', 'Great — that’s really clear.'],
-  good: ['Got it.', 'Okay, makes sense.'],
-  ok: ['Right, okay.', 'Mm-hm.'],
-  poor: ['Sorry, could you say a bit more?', 'Hmm, tell me a little more about that.'],
+const ACK: Record<ResponseEvaluation['overall'], string[]> = {
+  excellent: ['Nice — that’s really clear.', 'Got it, that makes total sense.'],
+  good: ['Okay, got it.', 'Makes sense.'],
+  ok: ['Right.', 'Mm-hm, okay.'],
+  poor: ['Sorry — could you say a bit more about that?', 'Hmm, tell me a little more.'],
 };
 
 const FOLLOW_UPS = [
   'What’s the next step from your side?',
   'Anything you need from me?',
-  'And how are you feeling about the timeline?',
-  'Is anything slowing you down right now?',
-  'Cool — what are you focusing on today?',
+  'How are you feeling about the timeline?',
+  'Is anything slowing you down?',
+  'What are you focusing on today?',
+  'And how did that go?',
 ];
 
-function emotionFor(rating: ResponseEvaluation['overall']): CharacterEmotion {
-  if (rating === 'excellent') return 'happy';
-  if (rating === 'poor') return 'concerned';
+function emotionFor(overall: ResponseEvaluation['overall'], done: boolean): CharacterEmotion {
+  if (done) return 'happy';
+  if (overall === 'excellent') return 'happy';
+  if (overall === 'poor') return 'concerned';
   return 'talking';
 }
 
 export function runMockBrain(input: BrainInput): AiTurnResult {
-  const { lesson, playerMessage, completedObjectiveIds, playerTurnNumber } = input;
-  const required = lesson.completionCriteria.requiredObjectives;
+  const { lesson, playerMessage, completedObjectiveIds, playerTurnNumber, comfortableConcepts } =
+    input;
+
   const allObjectiveIds = lesson.learningObjectives.map((o) => o.id);
+  const openObjective =
+    lesson.learningObjectives.find((o) => !completedObjectiveIds.includes(o.id)) ??
+    lesson.learningObjectives[lesson.learningObjectives.length - 1]!;
 
-  const matchedError = COMMON_ESL_PATTERNS.find((p) => p.test.test(playerMessage));
-  const usedPhrase = usesTargetPhrase(playerMessage, lesson.targetPhrases);
-  const evaluation = evaluate(playerMessage, matchedError, usedPhrase);
-  const learning = buildFeedback(matchedError, usedPhrase);
+  const words = wordCount(playerMessage);
+  const meaningCommunicated = words >= 3;
 
-  // Objective progress: a "real enough" answer advances the next open objective.
+  const rule = GAP_RULES.find(
+    (r) => r.test.test(playerMessage) && !(r.unless && r.unless.test(playerMessage)),
+  );
+  const suppressed = rule ? comfortableConcepts.includes(gapConceptKey(rule.concept)) : false;
+
+  const intent = inferIntent(playerMessage, openObjective.description);
+
+  // ---- gap observation -------------------------------------------------
+  let gap: LanguageGapObservation | null = null;
+  if (rule && meaningCommunicated && !suppressed) {
+    gap = {
+      concept: rule.concept,
+      gapType: rule.gapType,
+      priority: rule.priority,
+      userIntent: intent,
+      userAttempt: playerMessage,
+      betterExpression: rule.better(playerMessage),
+      patternId: rule.patternId,
+      explanation: rule.explanation,
+    };
+  }
+
+  const patternsUsedNaturally = gap
+    ? []
+    : detectNaturalPatterns(playerMessage, rule?.patternId);
+
+  // ---- evaluation ----------------------------------------------------
+  const grammar: ResponseEvaluation['grammar'] = rule
+    ? rule.gapType === 'grammar'
+      ? 'poor'
+      : 'ok'
+    : 'good';
+  const hasContraction = /\b\w+'\w+\b/.test(playerMessage);
+  const natural =
+    !rule && (hasContraction || patternsUsedNaturally.length > 0) && words >= 4;
+  const naturalness: ResponseEvaluation['naturalness'] = natural ? 'natural' : 'ok';
+  const contextAppropriate = meaningCommunicated && !/\b(hey man|dude|whatever)\b/i.test(playerMessage);
+
+  let overall: ResponseEvaluation['overall'] = 'ok';
+  if (!meaningCommunicated) overall = 'poor';
+  else if (!rule && natural) overall = 'excellent';
+  else if (!rule) overall = 'good';
+  else if (rule.priority === 'optional' || rule.priority === 'useful') overall = 'good';
+
+  const evaluation: ResponseEvaluation = {
+    overall,
+    meaningCorrect: meaningCommunicated,
+    grammar,
+    naturalness,
+  };
+
+  const analysis: TurnLanguageAnalysis = {
+    understoodIntent: intent,
+    meaningCommunicated,
+    grammarOk: grammar !== 'poor',
+    natural,
+    contextAppropriate,
+    gap,
+    patternsUsedNaturally,
+  };
+
+  // ---- objective progress -----------------------------------------------
   const objectiveProgress: Record<string, boolean> = {};
   for (const id of allObjectiveIds) {
     objectiveProgress[id] = completedObjectiveIds.includes(id);
   }
-  const nextOpen = allObjectiveIds.find((id) => !objectiveProgress[id]);
-  if (nextOpen && evaluation.meaningCorrect) {
-    objectiveProgress[nextOpen] = true;
+  if (meaningCommunicated && !objectiveProgress[openObjective.id]) {
+    objectiveProgress[openObjective.id] = true;
   }
 
-  const completedCount = allObjectiveIds.filter((id) => objectiveProgress[id]).length;
-  const requiredDone = required.every((id) => objectiveProgress[id]);
+  const requiredDone = lesson.completionCriteria.requiredObjectives.every(
+    (id) => objectiveProgress[id],
+  );
   const lessonComplete =
     requiredDone && playerTurnNumber >= lesson.completionCriteria.minimumTurns;
 
-  // XP
-  let xpEarned = { excellent: 15, good: 10, ok: 5, poor: 0 }[evaluation.overall];
-  if (usedPhrase) xpEarned += 20;
-  if (lessonComplete) xpEarned += 100;
+  // ---- xp -------------------------------------------------------------
+  let xpEarned = { excellent: 15, good: 10, ok: 5, poor: 0 }[overall];
+  if (patternsUsedNaturally.length > 0) xpEarned += 10;
+  if (lessonComplete) xpEarned += lesson.xp;
 
-  const newPhrases: TargetPhrase[] = usedPhrase ? [usedPhrase] : [];
+  // ---- learning feedback (subtle) -------------------------------------
+  const learning: LearningFeedback = gap
+    ? {
+        kind: 'correction',
+        shouldShow: true,
+        betterExpression: gap.betterExpression,
+        explanation: gap.explanation,
+      }
+    : patternsUsedNaturally.length > 0 && overall === 'excellent'
+      ? {
+          kind: 'pattern-used',
+          shouldShow: false,
+          betterExpression: null,
+          explanation: null,
+        }
+      : { kind: 'none', shouldShow: false, betterExpression: null, explanation: null };
 
-  // Character line
-  const ackPool = ACK_BY_RATING[evaluation.overall];
+  // ---- character line ------------------------------------------------
+  const ackPool = ACK[overall];
   const ack = ackPool[playerTurnNumber % ackPool.length] ?? ackPool[0]!;
+  const completedCount = allObjectiveIds.filter((id) => objectiveProgress[id]).length;
   let text: string;
   if (lessonComplete) {
-    text = `${ack} That’s everything I needed — thanks for the update!`;
-  } else if (completedCount >= required.length && !lessonComplete) {
-    text = `${ack} Anything else you want to flag before we wrap up?`;
+    text = `${ack} That’s everything I needed — thanks!`;
+  } else if (completedCount >= lesson.completionCriteria.requiredObjectives.length) {
+    text = `${ack} Anything else before we wrap up?`;
   } else {
     const follow = FOLLOW_UPS[(playerTurnNumber + completedCount) % FOLLOW_UPS.length]!;
     text = `${ack} ${follow}`;
   }
 
   return {
-    characterResponse: {
-      text,
-      emotion: lessonComplete ? 'happy' : emotionFor(evaluation.overall),
-    },
+    characterResponse: { text, emotion: emotionFor(overall, lessonComplete) },
     evaluation,
+    analysis,
     learning,
     objectiveProgress,
-    newPhrases,
     lessonComplete,
     xpEarned,
   };
+}
+
+function gapConceptKey(concept: string): string {
+  return concept
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }

@@ -1,0 +1,28 @@
+{
+  "_comment": "Per-lesson visual-novel presentation for curriculum lessons: which coworker, which scene, and the NPC's opening line. Curriculum content stays pure; this is the only place scene/character/opening is decided, and it is data, not code. Any lesson id missing here falls back to computed defaults in curriculum.ts.",
+  "lessons": {
+    "office-01": { "characterId": "daniel", "background": "kitchen", "openingText": "Morning! How was your weekend? Ready for Monday?", "openingEmotion": "happy" },
+    "office-02": { "characterId": "daniel", "background": "coffee-area", "openingText": "Hey, you look relaxed. Did you get up to anything fun over the weekend?", "openingEmotion": "happy" },
+    "office-03": { "characterId": "priya", "background": "kitchen", "openingText": "Oh hey, grabbing a coffee too? How's your day going so far?", "openingEmotion": "talking" },
+    "office-04": { "characterId": "emily", "background": "office-morning", "openingText": "Hey, quick one — what are you working on today?", "openingEmotion": "talking" },
+    "office-05": { "characterId": "emily", "background": "office-morning", "openingText": "Morning! What does your day look like?", "openingEmotion": "talking" },
+    "office-06": { "characterId": "alex", "background": "lobby", "openingText": "Oh, hey! I haven't seen you in a while. How have you been?", "openingEmotion": "happy" },
+    "office-07": { "characterId": "nina", "background": "office-morning", "openingText": "Hey, do you have a few minutes later today? I wanted to go over something with you.", "openingEmotion": "talking" },
+    "office-08": { "characterId": "emily", "background": "office-morning", "openingText": "I know you're heads-down right now — could we sync a bit later?", "openingEmotion": "talking" },
+    "office-09": { "characterId": "mike", "background": "meeting-room", "openingText": "Welcome aboard! Do you want to introduce yourself to the team?", "openingEmotion": "happy" },
+    "office-10": { "characterId": "daniel", "background": "kitchen", "openingText": "Hi! I'm Daniel, I just joined the backend team this week. You're on this project too, right?", "openingEmotion": "happy" },
+
+    "project-01": { "characterId": "emily", "background": "office-morning", "openingText": "Hey! Good timing. How's the project going?", "openingEmotion": "talking" },
+    "project-02": { "characterId": "nina", "background": "meeting-room", "openingText": "Quick status check before standup — where are things at on your side?", "openingEmotion": "talking" },
+    "project-03": { "characterId": "priya", "background": "meeting-room", "openingText": "Can you walk me through what you've been working on?", "openingEmotion": "thinking" },
+    "project-04": { "characterId": "emily", "background": "office-afternoon", "openingText": "You mentioned you're stuck on something. What's blocking you?", "openingEmotion": "concerned" },
+    "project-05": { "characterId": "priya", "background": "meeting-room", "openingText": "You wanted to talk? What do you need a hand with?", "openingEmotion": "talking" },
+    "project-06": { "characterId": "emily", "background": "office-morning", "openingText": "When do you think you'll have this ready?", "openingEmotion": "talking" },
+    "project-07": { "characterId": "emily", "background": "office-afternoon", "openingText": "How are we doing on the timeline — still on track for this week?", "openingEmotion": "concerned" },
+    "project-08": { "characterId": "mike", "background": "meeting-room", "openingText": "I hear the date might slip. Talk me through it.", "openingEmotion": "concerned" },
+    "project-09": { "characterId": "priya", "background": "meeting-room", "openingText": "You said something came up in production? What happened?", "openingEmotion": "concerned" },
+    "project-10": { "characterId": "priya", "background": "meeting-room", "openingText": "Okay, so we know it broke. Do we know why yet?", "openingEmotion": "thinking" },
+    "project-11": { "characterId": "emily", "background": "meeting-room", "openingText": "So what do you think we should do about it?", "openingEmotion": "thinking" },
+    "project-12": { "characterId": "alex", "background": "office-morning", "openingText": "Hey — you wanted to follow up on something?", "openingEmotion": "talking" }
+  }
+}

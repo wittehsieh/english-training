@@ -1,17 +1,16 @@
-import { CATEGORIES, LESSONS } from '../../data/lessons';
+import { CHAPTERS, LESSONS } from '../../data/curriculum';
 import { usePlayer } from '../../state/PlayerContext';
-import { levelForXp } from '../../types';
+import { levelForXp, type MasteryStatus } from '../../types';
 import { XPBar } from './XPBar';
+
+const OPEN: MasteryStatus[] = ['needs_practice', 'developing'];
 
 export function ProgressPanel() {
   const { profile } = usePlayer();
   const level = levelForXp(profile.xp);
 
-  const lessonCountByCategory = CATEGORIES.map((category) => {
-    const total = LESSONS.filter((l) => l.category === category.id).length;
-    const done = profile.categoryProgress[category.id] ?? 0;
-    return { category, total, done };
-  });
+  const openGaps = profile.languageGaps.filter((g) => OPEN.includes(g.status));
+  const closingGaps = profile.languageGaps.filter((g) => !OPEN.includes(g.status));
 
   return (
     <div className="grid" style={{ gap: 20 }}>
@@ -31,8 +30,12 @@ export function ProgressPanel() {
           </b>
         </div>
         <div className="stat-row">
-          <span>Phrases learned</span>
-          <b>{profile.learnedPhrases.length}</b>
+          <span>Language gaps — working on</span>
+          <b>{openGaps.length}</b>
+        </div>
+        <div className="stat-row">
+          <span>Language gaps — familiar / mastered</span>
+          <b>{closingGaps.length}</b>
         </div>
         <div style={{ marginTop: 16 }}>
           <XPBar xp={profile.xp} />
@@ -40,18 +43,23 @@ export function ProgressPanel() {
       </div>
 
       <div className="card">
-        <h2 style={{ fontSize: 16 }}>Categories</h2>
+        <h2 style={{ fontSize: 16 }}>Chapters</h2>
         <div className="grid" style={{ gap: 10 }}>
-          {lessonCountByCategory.map(({ category, total, done }) => (
-            <div key={category.id} className="stat-row">
-              <span>
-                {category.icon} {category.name}
-              </span>
-              <span className="faint">
-                {done} / {total || '—'}
-              </span>
-            </div>
-          ))}
+          {CHAPTERS.map((chapter) => {
+            const done = chapter.lessons.filter((l) =>
+              profile.completedLessons.some((c) => c.lessonId === l.id),
+            ).length;
+            return (
+              <div key={chapter.id} className="stat-row">
+                <span>
+                  {chapter.icon} {chapter.title}
+                </span>
+                <span className="faint">
+                  {done} / {chapter.lessons.length}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

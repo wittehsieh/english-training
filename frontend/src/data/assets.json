@@ -76,6 +76,45 @@
         "thinking": "/assets/characters/priya/thinking.webp",
         "talking": "/assets/characters/priya/talking.webp"
       }
+    },
+    "alex": {
+      "id": "alex",
+      "name": "Alex",
+      "role": "UX Designer",
+      "expressions": {
+        "neutral": "/assets/characters/alex/neutral.webp",
+        "happy": "/assets/characters/alex/happy.webp",
+        "surprised": "/assets/characters/alex/surprised.webp",
+        "concerned": "/assets/characters/alex/concerned.webp",
+        "thinking": "/assets/characters/alex/thinking.webp",
+        "talking": "/assets/characters/alex/talking.webp"
+      }
+    },
+    "mike": {
+      "id": "mike",
+      "name": "Mike",
+      "role": "Engineering Manager",
+      "expressions": {
+        "neutral": "/assets/characters/mike/neutral.webp",
+        "happy": "/assets/characters/mike/happy.webp",
+        "surprised": "/assets/characters/mike/surprised.webp",
+        "concerned": "/assets/characters/mike/concerned.webp",
+        "thinking": "/assets/characters/mike/thinking.webp",
+        "talking": "/assets/characters/mike/talking.webp"
+      }
+    },
+    "nina": {
+      "id": "nina",
+      "name": "Nina",
+      "role": "TPM",
+      "expressions": {
+        "neutral": "/assets/characters/nina/neutral.webp",
+        "happy": "/assets/characters/nina/happy.webp",
+        "surprised": "/assets/characters/nina/surprised.webp",
+        "concerned": "/assets/characters/nina/concerned.webp",
+        "thinking": "/assets/characters/nina/thinking.webp",
+        "talking": "/assets/characters/nina/talking.webp"
+      }
     }
   }
 }

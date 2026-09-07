@@ -1,4 +1,4 @@
-import { getLesson } from '../../data/lessons';
+import { getLesson } from '../../data/curriculum';
 import type {
   ConversationState,
   ConversationTurn,
@@ -17,23 +17,20 @@ interface InternalConvo {
 }
 
 let counter = 0;
-const nextId = (prefix: string): string => `${prefix}-${Date.now().toString(36)}-${counter++}`;
+const nextId = (prefix: string): string =>
+  `${prefix}-${Date.now().toString(36)}-${counter++}`;
 
 /**
- * Fully client-side conversation service. This is what GitHub Pages runs.
+ * Fully client-side conversation service — what GitHub Pages runs.
  *
- * It fakes latency and a rule-based "AI" (see {@link runMockBrain}). Replace it
- * with {@link HttpConversationService} by setting `VITE_API_BASE_URL`, and later
- * the backend replaces its rules with the OpenAI API.
+ * Fakes latency and a rule-based "AI" (see {@link runMockBrain}). Its response
+ * shape is identical to what the backend / future OpenAI service returns, so
+ * the UI cannot tell them apart.
  */
 export class MockConversationService implements ConversationService {
   private readonly store = new Map<string, InternalConvo>();
 
-  private readonly latencyMs: number;
-
-  constructor(latencyMs = 550) {
-    this.latencyMs = latencyMs;
-  }
+  constructor(private readonly latencyMs = 550) {}
 
   async startConversation(
     request: StartConversationRequest,
@@ -69,7 +66,8 @@ export class MockConversationService implements ConversationService {
       objectives: Object.fromEntries(
         lesson.learningObjectives.map((o) => [o.id, { completed: false }]),
       ),
-      learnedPhrases: [],
+      identifiedGaps: [],
+      patternsUsedNaturally: [],
       xp: 0,
       status: 'active',
     };
@@ -96,17 +94,14 @@ export class MockConversationService implements ConversationService {
     await this.delay();
 
     convo.playerTurns += 1;
-    convo.turns.push({
-      id: nextId('turn'),
-      speaker: 'player',
-      text: message,
-    });
+    convo.turns.push({ id: nextId('turn'), speaker: 'player', text: message });
 
     const result = runMockBrain({
       lesson,
       playerMessage: message,
       completedObjectiveIds: convo.completedObjectiveIds,
       playerTurnNumber: convo.playerTurns,
+      comfortableConcepts: request.comfortableConcepts ?? [],
     });
 
     convo.completedObjectiveIds = Object.entries(result.objectiveProgress)
@@ -122,15 +117,9 @@ export class MockConversationService implements ConversationService {
     };
     convo.turns.push(characterTurn);
 
-    if (result.lessonComplete) {
-      this.store.delete(request.conversationId);
-    }
+    if (result.lessonComplete) this.store.delete(request.conversationId);
 
-    return {
-      conversationId: request.conversationId,
-      turn: characterTurn,
-      result,
-    };
+    return { conversationId: request.conversationId, turn: characterTurn, result };
   }
 
   private delay(): Promise<void> {

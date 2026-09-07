@@ -31,14 +31,17 @@ export class ConversationEngine {
     private readonly service: ConversationService,
     readonly lesson: Lesson,
     private conversationState: ConversationState,
+    /** gap concepts the learner is already comfortable with (don't re-teach) */
+    private readonly comfortableConcepts: string[],
   ) {}
 
   static async start(
     service: ConversationService,
     lesson: Lesson,
+    comfortableConcepts: string[] = [],
   ): Promise<ConversationEngine> {
     const state = await service.startConversation({ lessonId: lesson.id });
-    return new ConversationEngine(service, lesson, state);
+    return new ConversationEngine(service, lesson, state, comfortableConcepts);
   }
 
   get state(): ConversationState {
@@ -104,6 +107,7 @@ export class ConversationEngine {
         conversationId: this.conversationState.conversationId,
         lessonId: this.lesson.id,
         message,
+        comfortableConcepts: this.comfortableConcepts,
       });
       this.applyResult(response.turn, response.result);
       return response.result;
@@ -123,12 +127,20 @@ export class ConversationEngine {
       objectives[id] = { completed: done || (objectives[id]?.completed ?? false) };
     }
 
-    const learnedPhrases = [...this.conversationState.learnedPhrases];
-    for (const phrase of result.newPhrases) {
-      if (!learnedPhrases.some((p) => p.id === phrase.id)) {
-        learnedPhrases.push(phrase);
+    const identifiedGaps = [...this.conversationState.identifiedGaps];
+    if (result.analysis.gap) {
+      const key = result.analysis.gap.concept.toLowerCase();
+      if (!identifiedGaps.some((g) => g.concept.toLowerCase() === key)) {
+        identifiedGaps.push(result.analysis.gap);
       }
     }
+
+    const patternsUsedNaturally = [
+      ...new Set([
+        ...this.conversationState.patternsUsedNaturally,
+        ...result.analysis.patternsUsedNaturally,
+      ]),
+    ];
 
     this.conversationState = {
       ...this.conversationState,
@@ -137,7 +149,8 @@ export class ConversationEngine {
         { ...characterTurn, id: characterTurn.id || localTurnId() },
       ],
       objectives,
-      learnedPhrases,
+      identifiedGaps,
+      patternsUsedNaturally,
       xp: this.conversationState.xp + result.xpEarned,
       status: result.lessonComplete ? 'complete' : 'active',
     };

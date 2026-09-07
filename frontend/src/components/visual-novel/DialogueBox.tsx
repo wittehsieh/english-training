@@ -75,7 +75,7 @@ export function DialogueBox({
 
         {hint && !isPlayer && done && !waiting ? (
           <p className="vn-dialogue__hint">
-            💬 Try to use: <b>{hint}</b>
+            💬 One way to say it: <b>{hint}</b> — but your own words are fine.
           </p>
         ) : null}
       </div>

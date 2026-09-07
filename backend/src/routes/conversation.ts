@@ -71,7 +71,8 @@ conversationRouter.post(
       objectives: Object.fromEntries(
         lesson.learningObjectives.map((o) => [o.id, { completed: false }]),
       ),
-      learnedPhrases: [],
+      identifiedGaps: [],
+      patternsUsedNaturally: [],
       xp: 0,
       status: 'active',
     };
@@ -85,7 +86,7 @@ conversationRouter.post(
     req: Request<unknown, unknown, SendMessageRequest>,
     res: Response,
   ): Promise<void> => {
-    const { conversationId, message } = req.body ?? {};
+    const { conversationId, message, comfortableConcepts } = req.body ?? {};
     const trimmed = (message ?? '').trim();
     if (!trimmed) {
       res.status(400).json({ error: 'Empty message.' });
@@ -114,6 +115,7 @@ conversationRouter.post(
         playerMessage: trimmed,
         completedObjectiveIds: convo.completedObjectiveIds,
         playerTurnNumber: convo.playerTurns,
+        comfortableConcepts: Array.isArray(comfortableConcepts) ? comfortableConcepts : [],
       });
 
       convo.completedObjectiveIds = Object.entries(result.objectiveProgress)

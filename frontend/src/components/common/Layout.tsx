@@ -5,7 +5,7 @@ import { levelForXp } from '../../types';
 const NAV = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
   { to: '/lessons', label: 'Lessons', icon: '📚', end: false },
-  { to: '/phrases', label: 'Phrases', icon: '📓', end: false },
+  { to: '/my-english', label: 'My English', icon: '🗒️', end: false },
   { to: '/progress', label: 'Progress', icon: '📈', end: false },
   { to: '/settings', label: 'Settings', icon: '⚙️', end: false },
 ];

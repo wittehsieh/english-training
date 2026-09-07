@@ -1,9 +1,4 @@
-import type { TargetPhrase } from './lesson';
-
-export interface LearnedPhraseRecord extends TargetPhrase {
-  sourceLessonId: string;
-  learnedAt: string;
-}
+import type { LanguageGap } from './learning';
 
 export interface CompletedLessonRecord {
   lessonId: string;
@@ -16,9 +11,10 @@ export interface PlayerProfile {
   xp: number;
   level: number;
   completedLessons: CompletedLessonRecord[];
-  learnedPhrases: LearnedPhraseRecord[];
-  /** category id -> number of completed lessons in that category */
-  categoryProgress: Record<string, number>;
+  /** the Personal Language Gap store — the core learning record */
+  languageGaps: LanguageGap[];
+  /** chapter id -> number of completed lessons in that chapter */
+  chapterProgress: Record<string, number>;
   settings: PlayerSettings;
 }
 
@@ -38,12 +34,12 @@ export const EMPTY_PROFILE: PlayerProfile = {
   xp: 0,
   level: 1,
   completedLessons: [],
-  learnedPhrases: [],
-  categoryProgress: {},
+  languageGaps: [],
+  chapterProgress: {},
   settings: DEFAULT_SETTINGS,
 };
 
-/** 250 XP per level, capped only by content. */
+/** 250 XP per level. */
 export function levelForXp(xp: number): number {
   return Math.floor(xp / 250) + 1;
 }

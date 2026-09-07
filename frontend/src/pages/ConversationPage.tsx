@@ -8,13 +8,13 @@ import { LearningFeedback } from '../components/visual-novel/LearningFeedback';
 import { getCharacter, getLesson } from '../data/lessons';
 import { useConversation, type LessonSummary } from '../engine/useConversation';
 import { usePlayer } from '../state/PlayerContext';
-import type { CharacterExpression } from '../types';
+import type { CharacterExpression, TurnLanguageAnalysis } from '../types';
 
 export function ConversationPage() {
   const { lessonId = '' } = useParams();
   const lesson = getLesson(lessonId);
   const navigate = useNavigate();
-  const { profile, completeLesson } = usePlayer();
+  const { profile, comfortableConcepts, observeTurn, completeLesson } = usePlayer();
 
   if (!lesson) return <Navigate to="/lessons" replace />;
 
@@ -24,16 +24,15 @@ export function ConversationPage() {
       lessonId={lesson.id}
       hintsEnabled={profile.settings.showLearningHints}
       reducedMotion={profile.settings.reducedMotion}
+      comfortableConcepts={comfortableConcepts}
+      onObserveTurn={(analysis) => observeTurn(analysis, lesson.id)}
       onExit={() => navigate('/lessons')}
       onComplete={(summary) => {
         completeLesson({
           lessonId: lesson.id,
-          categoryId: lesson.category,
+          chapterId: lesson.chapterId,
           score: summary.score,
           xpEarned: summary.xpEarned,
-          phrases: lesson.targetPhrases
-            .filter((p) => summary.learnedPhraseIds.includes(p.id))
-            .map((phrase) => ({ phrase, sourceLessonId: lesson.id })),
         });
         navigate(`/result/${lesson.id}`, { state: summary });
       }}
@@ -45,6 +44,8 @@ interface ScreenProps {
   lessonId: string;
   hintsEnabled: boolean;
   reducedMotion: boolean;
+  comfortableConcepts: string[];
+  onObserveTurn: (analysis: TurnLanguageAnalysis) => void;
   onExit: () => void;
   onComplete: (summary: LessonSummary) => void;
 }
@@ -53,14 +54,17 @@ function ConversationScreen({
   lessonId,
   hintsEnabled,
   reducedMotion,
+  comfortableConcepts,
+  onObserveTurn,
   onExit,
   onComplete,
 }: ScreenProps) {
   const lesson = getLesson(lessonId)!;
   const { phase, error, state, progress, lastResult, summary, send } =
-    useConversation(lesson);
+    useConversation(lesson, comfortableConcepts);
   const [showHint, setShowHint] = useState(false);
   const completedRef = useRef(false);
+  const observedRef = useRef<string | null>(null);
 
   // Warm the cache for this lesson's background + character expressions.
   useEffect(() => {
@@ -71,6 +75,20 @@ function ConversationScreen({
       ),
     );
   }, [lesson]);
+
+  // Fold each freshly evaluated turn into the Personal Language Gap store.
+  useEffect(() => {
+    if (lastResult && state) {
+      const lastPlayerTurn = [...state.turns]
+        .reverse()
+        .find((t) => t.speaker === 'player');
+      const marker = lastPlayerTurn?.id ?? null;
+      if (marker && marker !== observedRef.current) {
+        observedRef.current = marker;
+        onObserveTurn(lastResult.analysis);
+      }
+    }
+  }, [lastResult, state, onObserveTurn]);
 
   useEffect(() => {
     if (summary && !completedRef.current) {
@@ -99,9 +117,9 @@ function ConversationScreen({
   }, [turns, phase, sceneChar]);
 
   const playerTurns = progress?.playerTurns ?? 0;
-  const hintPhrase =
-    lesson.targetPhrases[
-      Math.min(playerTurns, lesson.targetPhrases.length - 1)
+  const hintExpression =
+    lesson.targetExpressions[
+      Math.min(playerTurns, lesson.targetExpressions.length - 1)
     ];
   const busy = phase === 'sending' || phase === 'loading' || phase === 'complete';
 
@@ -169,7 +187,7 @@ function ConversationScreen({
         reducedMotion={reducedMotion}
         hint={
           hintsEnabled && lastTurn?.speaker === 'character'
-            ? hintPhrase?.phrase
+            ? hintExpression?.text
             : undefined
         }
       >
@@ -186,7 +204,7 @@ function ConversationScreen({
             void send(message);
           }}
           onHint={() => setShowHint((v) => !v)}
-          suggestion={showHint ? (hintPhrase?.phrase ?? null) : null}
+          suggestion={showHint ? (hintExpression?.text ?? null) : null}
         />
       </DialogueBox>
     </div>

@@ -5,7 +5,7 @@ import { HomePage } from './pages/HomePage';
 import { LessonsPage } from './pages/LessonsPage';
 import { ConversationPage } from './pages/ConversationPage';
 import { ResultPage } from './pages/ResultPage';
-import { PhraseBookPage } from './pages/PhraseBookPage';
+import { MyEnglishPage } from './pages/MyEnglishPage';
 import { ProgressPage } from './pages/ProgressPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { PlayerProvider, usePlayer } from './state/PlayerContext';
@@ -37,7 +37,8 @@ export function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/lessons" element={<LessonsPage />} />
             <Route path="/result/:lessonId" element={<ResultPage />} />
-            <Route path="/phrases" element={<PhraseBookPage />} />
+            <Route path="/my-english" element={<MyEnglishPage />} />
+            <Route path="/phrases" element={<Navigate to="/my-english" replace />} />
             <Route path="/progress" element={<ProgressPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -20,14 +20,17 @@ phrasing, and tracks the lesson objectives.
 │   ├── public/assets/  AI-generated artwork drops in here (git-ignored content)
 │   └── src/
 │       ├── components/visual-novel/   Scene, Character, DialogueBox, PlayerInput …
-│       ├── engine/                    ConversationEngine + useConversation hook
+│       ├── components/learning/       LanguageGapCard, MyEnglishPanel
+│       ├── engine/                    ConversationEngine, useConversation, languageGap
 │       ├── services/
-│       │   ├── conversation/          ConversationService interface + Mock + Http
+│       │   ├── conversation/          ConversationService interface + Mock + Http + mockBrain
 │       │   └── storage/               StorageService (localStorage)
 │       ├── assets/AssetManager.ts     id → asset-URL resolver
-│       ├── data/                      lessons.json + assets.json (data-driven!)
-│       ├── state/PlayerContext.tsx    XP / level / phrase book / settings
-│       └── pages/                     Home, Lessons, Conversation, Result, …
+│       ├── data/curriculum/           curriculum.json, phrasePatterns.json, learningModel.json
+│       ├── data/curriculum.ts         adapter: raw curriculum → runtime Lesson[]
+│       ├── data/assets.json           id → artwork URL manifest
+│       ├── state/PlayerContext.tsx    XP / level / Personal Language Gaps / settings
+│       └── pages/                     Home, Lessons, Conversation, Result, MyEnglish, …
 │
 └── backend/           Node + Express + TS. Deploy separately (Cloud Run / Render / …).
     └── src/
@@ -102,34 +105,69 @@ npm run dev
 
 ---
 
-## Content is data-driven
+## Curriculum (data-driven)
 
-Lessons are **not** hard-coded in components. They live in
-[`frontend/src/data/lessons.json`](frontend/src/data/lessons.json) and describe
-*what* to teach, not every possible player line:
+The game plays the **Workplace English RPG Curriculum** package, dropped in at
+[`frontend/src/data/curriculum/`](frontend/src/data/curriculum/) (also mirrored
+under `backend/src/data/curriculum/`):
 
-```jsonc
-{
-  "id": "project-update-001",
-  "category": "project_update",
-  "scene": { "background": "office-morning" },          // asset id, not a path
-  "characters": [
-    { "id": "emily", "name": "Emily", "role": "PM",
-      "expression": "neutral", "position": "center" }
-  ],
-  "learningObjectives": [
-    { "id": "describe_progress", "description": "Describe current progress" }
-  ],
-  "targetPhrases": [
-    { "id": "almost_done", "phrase": "I'm almost done with it.",
-      "meaning": "我差不多完成了。", "usage": "…" }
-  ],
-  "conversation": { "opening": { "characterId": "emily", "text": "How's the project going?" } },
-  "completionCriteria": { "requiredObjectives": ["describe_progress"], "minimumTurns": 4 }
-}
+| File | Purpose |
+| --- | --- |
+| `curriculum.json` | chapters → lessons (`mission`, `learningObjectives`, `targetExpressions`, `difficulty`, `xp`) |
+| `phrasePatterns.json` | reusable language patterns (`wait for + thing`, `by + deadline`, …) — AI guidance, never answer keys |
+| `learningModel.json` | the Personal Language Gap model: priorities, statuses, gap types, evaluation rules |
+| `presentationOverrides.json` | per-lesson visual-novel presentation (coworker, scene, opening line) — the only place this is decided, and it is data, not code |
+
+**Target expressions are NOT answer keys.** The player types free-form English;
+any response that communicates the intent is accepted. The expressions are
+guidance the AI may introduce or reference.
+
+### How a lesson is loaded
+
+`curriculum.json` is raw content. [`frontend/src/data/curriculum.ts`](frontend/src/data/curriculum.ts)
+adapts each raw lesson into the runtime `Lesson` the visual novel plays:
+
+```
+curriculum.json lesson            +  presentationOverrides.json[id]  +  characters.ts
+  { mission, learningObjectives,        { characterId, background,        { emily: {name,role,
+    targetExpressions, difficulty,        openingText, openingEmotion }      personality} , … }
+    xp }
+                     │
+                     ▼   toRuntimeLesson()
+  Lesson { scene{background}, characters[], conversation.opening,
+           learningObjectives[{id,description}],  // humanized via OBJECTIVE_LIBRARY
+           targetExpressions[{id,text,patternId?}], // linked to phrasePatterns
+           completionCriteria{requiredObjectives, minimumTurns} }
 ```
 
-The AI decides how the conversation actually unfolds.
+Any lesson id missing from `presentationOverrides.json` falls back to a
+deterministic default (scene + coworker rotate per chapter, opening derived from
+the mission). Components import `CHAPTERS` / `LESSONS` / `getLesson()` — never a
+JSON file directly.
+
+### Personal Language Gap — the core mechanism
+
+We do **not** record everything the player meets. Each evaluated turn returns a
+`TurnLanguageAnalysis` (`understoodIntent`, `meaningCommunicated`, `grammarOk`,
+`natural`, `contextAppropriate`, `gap`, `patternsUsedNaturally`). Only a turn
+with `gap !== null` becomes or reinforces a stored `LanguageGap`.
+
+- **Storage:** `PlayerProfile.languageGaps` in `localStorage` (via
+  `StorageService`), updated by `usePlayer().observeTurn(analysis, lessonId)`
+  which calls the pure functions in
+  [`frontend/src/engine/languageGap.ts`](frontend/src/engine/languageGap.ts).
+- **A new slip** → record created with `status: 'needs_practice'`, one
+  `incorrect` mastery-evidence entry.
+- **Same slip again** → `timesObserved++`, confidence up.
+- **Using a tracked pattern correctly & spontaneously** → `natural_spontaneous`
+  evidence; status climbs `needs_practice → developing → familiar → mastered`
+  (mastered needs natural use in **2 different lessons**).
+- **Not over-teaching:** concepts at `familiar`/`mastered` are passed to the
+  evaluator as `comfortableConcepts` and it stops surfacing them. Using a
+  pattern well that we are *not* tracking a gap for records **nothing** — the
+  player already knows it.
+
+Seen in the app on the **My English** screen (grouped Working on / Getting there / All).
 
 ---
 
@@ -157,17 +195,19 @@ an external AI image workflow. Nothing in `src/` hard-codes a file path.
    ```json
    "rooftop-evening": { "id": "rooftop-evening", "src": "/assets/backgrounds/rooftop/evening.webp", "focalPoint": "50% 40%" }
    ```
-3. Reference it from a lesson: `"scene": { "background": "rooftop-evening" }`.
+3. Point a lesson at it in `presentationOverrides.json`:
+   `"office-06": { "background": "rooftop-evening", ... }`.
 
 ### How to add a new **character**
 
 1. Create `frontend/public/assets/characters/<id>/` with the expression files.
-2. Add to `assets.json` → `characters`:
-   ```json
-   "alex": { "id": "alex", "name": "Alex", "role": "Designer",
-     "expressions": { "neutral": "/assets/characters/alex/neutral.webp", "...": "..." } }
-   ```
-3. Reference from a lesson's `characters` array by `id`.
+2. Add to `assets.json` → `characters` (URLs) **and**
+   [`frontend/src/data/characters.ts`](frontend/src/data/characters.ts) → `CHARACTERS`
+   (name, role, personality — the personality feeds the AI prompt).
+3. Assign the character to lessons in
+   [`presentationOverrides.json`](frontend/src/data/curriculum/presentationOverrides.json):
+   `"office-06": { "characterId": "<id>", ... }`. Also mirror steps 2–3 in
+   `backend/src/data/lessons.ts` (`CHARACTERS` + `OPENINGS`).
 
 ### How to add a new **expression**
 
@@ -176,6 +216,19 @@ an external AI image workflow. Nothing in `src/` hard-codes a file path.
 3. Add the literal to `CharacterExpression` in
    `frontend/src/types/assets.ts` (and the emotion set on the backend if the AI
    should return it). Unknown/missing expressions fall back to `neutral`.
+
+### How to add a new **lesson**
+
+1. Add the lesson object to the right chapter in
+   [`curriculum/curriculum.json`](frontend/src/data/curriculum/curriculum.json)
+   (`id`, `title`, `mission`, `learningObjectives`, `targetExpressions`,
+   `difficulty`, `xp`).
+2. Optionally add a `presentationOverrides.json` entry (coworker, scene,
+   opening line) — otherwise it gets sensible defaults.
+3. New objective ids get a title-cased description automatically; add a nicer
+   one to `OBJECTIVE_LIBRARY` in `curriculum.ts` if you want.
+4. Mirror the lesson (and any opening) into `backend/src/data/curriculum/` +
+   `backend/src/data/lessons.ts` if you run the backend.
 
 ---
 
@@ -197,23 +250,33 @@ GitHub Actions**.
 
 ## What is mocked / what's next
 
-**Mocked today**
+**Mocked today** — `mockBrain.ts` (frontend) and `MockAIConversationService`
+(backend) apply the `learningModel.json` contract with rules instead of an LLM:
 
-- `MockConversationService` (frontend) and `MockAIConversationService`
-  (backend) — small deterministic rules: match a target phrase, catch a few
-  common ESL slips, advance one objective per solid turn, finish when the
-  required objectives + minimum turns are met.
-- Character art & backgrounds — generated CSS placeholders.
+- infer intent from keyword buckets (else the current open objective);
+- a small table of common ESL slips → `LanguageGapObservation`
+  (`wait for + noun`, `by` vs `until`, `almost done`, `blocked on`, …);
+- regex-match `phrasePatterns.json` heads for "used naturally" credit;
+- advance one objective per meaningful turn; finish on required objectives +
+  minimum turns; XP from rating + pattern bonus + lesson XP;
+- honour `comfortableConcepts` so familiar/mastered gaps aren't re-taught.
 
-**Remaining for real OpenAI integration**
+Character art & backgrounds are generated CSS placeholders until real files land.
+
+**Remaining before connecting OpenAI**
 
 1. `cd backend && npm i openai`.
-2. Implement `evaluateTurn` in `OpenAIConversationService.ts` using
-   `buildSystemPrompt(lesson)` + the transcript, requesting a JSON object that
-   matches `AiTurnResult`; validate it before returning.
+2. Implement `evaluateTurn` in `OpenAIConversationService.ts`: send
+   `buildSystemPrompt(lesson)` (already written to emit the full `analysis`
+   object) + `formatTranscript(history)` + the `comfortableConcepts` list,
+   request a JSON object, and **validate it against `AiTurnResult`** before
+   returning (reject/repair malformed output).
 3. In `AIConversationService.ts`, return `new OpenAIConversationService(...)`
-   when `OPENAI_API_KEY` is set.
-4. Deploy the backend; set `VITE_API_BASE_URL`.
+   when `OPENAI_API_KEY` is set (the factory hook is already there).
+4. Deploy the backend; set `VITE_API_BASE_URL` in the Pages workflow env.
+5. Optionally move `curriculum/` + the adapter into a shared workspace package
+   so frontend and backend stop keeping parallel copies.
 
-No frontend, route, or component changes are required — the `AiTurnResult`
-contract is already in place.
+No frontend, route, page, or component changes are required — the
+`AiTurnResult` + `TurnLanguageAnalysis` contract is already in place and the UI
+cannot tell the mock from the real thing.
