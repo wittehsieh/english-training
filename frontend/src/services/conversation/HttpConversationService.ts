@@ -6,7 +6,8 @@ import type {
 } from '../../types';
 import { ConversationError, type ConversationService } from './ConversationService';
 
-const TIMEOUT_MS = 20_000;
+// Longer than the backend's own OpenAI timeout so its graceful fallback wins.
+const TIMEOUT_MS = 35_000;
 
 /**
  * Talks to our own backend (`backend/`). The backend — not this class — is the

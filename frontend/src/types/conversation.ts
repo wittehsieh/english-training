@@ -93,6 +93,13 @@ export interface SendMessageRequest {
    * would eventually track this itself.
    */
   comfortableConcepts?: string[];
+  /**
+   * The transcript so far (ending with this player message) and which
+   * objectives the client counts as done. Lets the backend stay stateless —
+   * required for serverless hosting where instances share no memory.
+   */
+  history?: ConversationTurn[];
+  completedObjectiveIds?: string[];
 }
 
 export interface ConversationTurnResponse {

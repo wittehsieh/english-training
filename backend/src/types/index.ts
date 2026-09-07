@@ -141,6 +141,13 @@ export interface SendMessageRequest {
   lessonId: string;
   message: string;
   comfortableConcepts?: string[];
+  /**
+   * Stateless path (serverless): the client sends the transcript so far and
+   * which objectives it already counts as done. When present, the server does
+   * not need any stored conversation.
+   */
+  history?: ConversationTurn[];
+  completedObjectiveIds?: string[];
 }
 
 export interface ConversationTurnResponse {

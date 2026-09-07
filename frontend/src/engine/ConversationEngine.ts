@@ -108,6 +108,12 @@ export class ConversationEngine {
         lessonId: this.lesson.id,
         message,
         comfortableConcepts: this.comfortableConcepts,
+        // Stateless backend support: send the transcript (already includes the
+        // optimistic player turn above) and the objectives done so far.
+        history: this.conversationState.turns,
+        completedObjectiveIds: Object.entries(this.conversationState.objectives)
+          .filter(([, o]) => o.completed)
+          .map(([objectiveId]) => objectiveId),
       });
       this.applyResult(response.turn, response.result);
       return response.result;

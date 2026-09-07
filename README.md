@@ -267,14 +267,32 @@ an external AI image workflow. Nothing in `src/` hard-codes a file path.
 - [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds
   `frontend/` and publishes `frontend/dist` on every push to `main`.
 - The **backend cannot go on Pages** — Pages is static and the backend holds
-  `OPENAI_API_KEY`. Deploy `backend/` to a server platform (Cloud Run / Render /
-  Railway / Fly / a VM):
-  - `npm run build --workspace backend` → `node backend/dist/server.js`
-  - set `OPENAI_API_KEY`, `OPENAI_MODEL`, and `CORS_ORIGIN=https://wittehsieh.github.io`
-    in that platform's secrets (never in this repo, Vite, or the workflow)
-  - then set `VITE_API_BASE_URL` to the backend's URL **in the Pages workflow's
-    `build` env** and redeploy the frontend. Until then the site runs the
-    in-browser mock, which is fine.
+  `OPENAI_API_KEY`. It runs two ways from the same code:
+  - **local / any Node host:** `npm run build --workspace backend` then
+    `npm start --workspace backend` (`node dist/server.js`) — a long-running
+    Express server.
+  - **serverless (Vercel):** `backend/api/index.ts` exports the Express app;
+    `backend/vercel.json` rewrites all routes to it. The `/message` endpoint is
+    **stateless** — the web client sends the transcript + completed objectives
+    each turn — so it works with no shared instance memory.
+
+### Deploy the backend to Vercel
+
+1. Vercel → **Add New → Project** → import `wittehsieh/english-training`.
+2. **Root Directory: `backend`** (Vercel then treats `api/` as a function and
+   uses `backend/package.json`).
+3. Environment variables:
+   `OPENAI_API_KEY`, `OPENAI_MODEL=gpt-4o-mini`,
+   `CORS_ORIGIN=https://wittehsieh.github.io`
+4. Deploy. Check `https://<project>.vercel.app/api/conversation/health` →
+   `{"ok":true,"engine":"openai"}`.
+
+### Point the site at it
+
+GitHub → repo **Settings → Secrets and variables → Actions → Variables → New**:
+`API_BASE_URL = https://<project>.vercel.app`. Re-run the Pages workflow
+(`deploy.yml` reads `vars.API_BASE_URL` into `VITE_API_BASE_URL`). Unset the
+variable to fall back to the in-browser mock.
 
 One-time repo setup: **Settings → Pages → Build and deployment → Source:
 GitHub Actions**.

@@ -8,5 +8,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    // Listen on the LAN so a phone on the same Wi-Fi can open the dev site.
+    host: true,
+  },
+  preview: {
+    port: 4173,
+    host: true,
   },
 });
