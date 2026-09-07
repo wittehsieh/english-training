@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",
+    "vercel-build": "echo 'no build step: Vercel builds api/ with @vercel/node'",
     "start": "node dist/server.js",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
