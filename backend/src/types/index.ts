@@ -74,6 +74,8 @@ export interface LanguageGapObservation {
   betterExpression: string;
   patternId?: string;
   explanation: string;
+  /** 0..1 — evaluator confidence this is a real, worth-teaching gap */
+  confidence?: number;
 }
 
 export interface TurnLanguageAnalysis {

@@ -38,8 +38,11 @@ phrasing, and tracks the lesson objectives.
         ├── services/
         │   ├── AIConversationService.ts       interface + factory
         │   ├── MockAIConversationService.ts   rule-based stand-in (default)
-        │   └── OpenAIConversationService.ts   Phase-2 skeleton (not wired)
-        └── prompts/systemPrompt.ts     the future OpenAI system prompt
+        │   ├── OpenAIConversationService.ts   real OpenAI + Structured Outputs
+        │   └── *.test.ts                       node --test
+        ├── lib/turnScoring.ts          shared: analysis → evaluation/XP/completion
+        ├── lib/openaiSchema.ts         zod contract + validation + fallback
+        └── prompts/systemPrompt.ts     role + rules + per-turn context builder
 ```
 
 ### Architecture
@@ -50,22 +53,29 @@ Browser ──► React frontend ──► ConversationService
                     ┌──────────────┴───────────────┐
             MockConversationService        HttpConversationService
             (in-browser, offline)                  │
-                                                   ▼
-                                     Backend  /api/conversation/*
+                                                   ▼  POST /api/conversation/{start,message}
+                                          Backend (Express)
                                                    │
-                                          AIConversationService
+                                          AIConversationService   ← factory
                                     ┌──────────────┴──────────────┐
                             MockAIConversationService   OpenAIConversationService
-                                  (default)                  (Phase 2)
+                              (no OPENAI_API_KEY)         (OPENAI_API_KEY set)
+                                    │                            │
+                                    └──────────┬─────────────────┘
+                                        scoreTurn()  ← shared: evaluation, objective
+                                                        progress, completion, XP
 ```
 
 The frontend only ever talks to the `ConversationService` **interface**. With
 no `VITE_API_BASE_URL` it uses the in-browser mock (this is what GitHub Pages
-runs). Point it at the backend and nothing else changes. Later the backend
-swaps its mock for OpenAI and, again, nothing else changes.
+runs). Point it at the backend and it goes over HTTP. The backend picks its
+engine from `OPENAI_API_KEY` — **the UI cannot tell the difference**: both
+engines produce a `TurnLanguageAnalysis`, and the shared `scoreTurn()` derives
+everything downstream so completion and XP stay server-authoritative.
 
 **`OPENAI_API_KEY` lives only in `backend/.env`. It is never imported by, bundled
-into, or sent to the frontend.**
+into, sent to, or referenced by the frontend** — the frontend has no OpenAI
+dependency at all and only ever calls our own `/api/conversation/*`.
 
 ---
 
@@ -79,27 +89,44 @@ npm run dev:frontend  # just the frontend (fully works on its own)
 npm run dev:backend   # just the backend
 
 npm run build          # builds the frontend (what GitHub Pages ships)
+npm run build:backend  # compiles the backend to backend/dist
 npm run typecheck      # tsc --noEmit for both workspaces
+npm run test           # backend unit tests (node --test)
 ```
 
 By default the frontend runs standalone with the mock conversation engine. To
 use the backend instead:
 
 ```bash
-cp backend/.env.example backend/.env      # optional — mock works with no key
+cp backend/.env.example backend/.env      # mock works with no key
 echo 'VITE_API_BASE_URL=http://localhost:8787' > frontend/.env
 npm run dev
 ```
 
+### Turning on the real OpenAI coworker
+
+```bash
+# backend/.env
+OPENAI_API_KEY=sk-...            # backend only — never in the frontend
+OPENAI_MODEL=gpt-4o-mini        # any model with Structured Outputs support
+OPENAI_TIMEOUT_MS=20000
+OPENAI_MAX_RETRIES=1
+```
+
+Restart the backend. `GET /api/conversation/health` reports `"engine":"openai"`.
+Remove the key ⇒ it goes back to `"engine":"mock"`. No frontend change either way.
+
 ### Environment variables
 
-| Variable            | Where            | Purpose                                                        |
-| ------------------- | ---------------- | ------------------------------------------------------------- |
-| `VITE_API_BASE_URL` | `frontend/.env`  | Backend URL. Empty ⇒ in-browser mock.                        |
-| `OPENAI_API_KEY`    | `backend/.env`   | Enables OpenAI (Phase 2). Empty ⇒ mock AI. **Backend only.** |
-| `OPENAI_MODEL`      | `backend/.env`   | Model id, default `gpt-4o-mini`.                             |
-| `PORT`              | `backend/.env`   | Backend port, default `8787`.                                |
-| `CORS_ORIGIN`       | `backend/.env`   | Comma-separated allowed origins.                             |
+| Variable             | Where           | Purpose                                                       |
+| -------------------- | --------------- | ------------------------------------------------------------ |
+| `VITE_API_BASE_URL`  | `frontend/.env` | Backend URL. Empty ⇒ in-browser mock (GitHub Pages).        |
+| `OPENAI_API_KEY`     | `backend/.env`  | Set ⇒ `OpenAIConversationService`. Empty ⇒ mock. **Backend only.** |
+| `OPENAI_MODEL`       | `backend/.env`  | Model id, default `gpt-4o-mini`. Must support Structured Outputs. |
+| `OPENAI_TIMEOUT_MS`  | `backend/.env`  | Per-request timeout, default `20000`.                       |
+| `OPENAI_MAX_RETRIES` | `backend/.env`  | OpenAI SDK retry count, default `1`.                        |
+| `PORT`               | `backend/.env`  | Backend port, default `8787`.                               |
+| `CORS_ORIGIN`        | `backend/.env`  | Comma-separated allowed origins.                            |
 
 `.env` files are git-ignored; only `.env.example` is committed.
 
@@ -239,44 +266,55 @@ an external AI image workflow. Nothing in `src/` hard-codes a file path.
 - Routing uses `HashRouter`, so deep links work without a 404 shim.
 - [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) builds
   `frontend/` and publishes `frontend/dist` on every push to `main`.
-- The **backend is not deployed to Pages** (Pages is static). Deploy it to
-  Cloud Run / Render / Railway / Fly / a VM, then set `VITE_API_BASE_URL` (in
-  the workflow env) to its URL and redeploy the frontend.
+- The **backend cannot go on Pages** — Pages is static and the backend holds
+  `OPENAI_API_KEY`. Deploy `backend/` to a server platform (Cloud Run / Render /
+  Railway / Fly / a VM):
+  - `npm run build --workspace backend` → `node backend/dist/server.js`
+  - set `OPENAI_API_KEY`, `OPENAI_MODEL`, and `CORS_ORIGIN=https://wittehsieh.github.io`
+    in that platform's secrets (never in this repo, Vite, or the workflow)
+  - then set `VITE_API_BASE_URL` to the backend's URL **in the Pages workflow's
+    `build` env** and redeploy the frontend. Until then the site runs the
+    in-browser mock, which is fine.
 
 One-time repo setup: **Settings → Pages → Build and deployment → Source:
 GitHub Actions**.
 
 ---
 
-## What is mocked / what's next
+## The two AI engines
 
-**Mocked today** — `mockBrain.ts` (frontend) and `MockAIConversationService`
-(backend) apply the `learningModel.json` contract with rules instead of an LLM:
+Both implement `AIConversationService.evaluateTurn(context) → AiTurnResult` and
+both produce a `TurnLanguageAnalysis` that the shared **`scoreTurn()`** turns
+into evaluation ratings, objective progress, lesson completion and XP. So the
+two are contract-identical and completion/XP are always server-decided.
 
-- infer intent from keyword buckets (else the current open objective);
-- a small table of common ESL slips → `LanguageGapObservation`
-  (`wait for + noun`, `by` vs `until`, `almost done`, `blocked on`, …);
-- regex-match `phrasePatterns.json` heads for "used naturally" credit;
-- advance one objective per meaningful turn; finish on required objectives +
-  minimum turns; XP from rating + pattern bonus + lesson XP;
-- honour `comfortableConcepts` so familiar/mastered gaps aren't re-taught.
+### `MockAIConversationService` (no key — dev / offline / tests / CI)
 
-Character art & backgrounds are generated CSS placeholders until real files land.
+Rules, not an LLM: infer intent from keyword buckets → a small table of common
+ESL slips → `LanguageGapObservation`; regex-match `phrasePatterns.json` heads
+for "used naturally" credit; advance one open objective per meaningful turn.
+Kept intact and still the default.
 
-**Remaining before connecting OpenAI**
+### `OpenAIConversationService` (`OPENAI_API_KEY` set)
 
-1. `cd backend && npm i openai`.
-2. Implement `evaluateTurn` in `OpenAIConversationService.ts`: send
-   `buildSystemPrompt(lesson)` (already written to emit the full `analysis`
-   object) + `formatTranscript(history)` + the `comfortableConcepts` list,
-   request a JSON object, and **validate it against `AiTurnResult`** before
-   returning (reject/repair malformed output).
-3. In `AIConversationService.ts`, return `new OpenAIConversationService(...)`
-   when `OPENAI_API_KEY` is set (the factory hook is already there).
-4. Deploy the backend; set `VITE_API_BASE_URL` in the Pages workflow env.
-5. Optionally move `curriculum/` + the adapter into a shared workspace package
-   so frontend and backend stop keeping parallel copies.
+1. `buildSystemPrompt(lesson)` — role, conversation rules, teaching rules
+   (intent-first, smallest correction, no over-teaching), curriculum guidance
+   ("target expressions are NOT answer keys"), phrase patterns.
+2. `buildTurnUserMessage(context)` — transcript (last `MAX_HISTORY_TURNS = 20`),
+   the player's message, per-objective state, and the `comfortableConcepts` the
+   model must not re-teach.
+3. `client.beta.chat.completions.parse(...)` with
+   `response_format: zodResponseFormat(ModelTurnSchema, …)` — **Structured
+   Outputs**, so the model returns a schema-valid object (not free text).
+4. `parseModelTurn()` validates (zod) → `normalizeModelTurn()` maps the raw
+   model shape (`gap.type`, `demonstratedObjectiveIds[]`) into the shared
+   `TurnLanguageAnalysis` → `scoreTurn()` finishes it.
+5. **Any failure** (timeout, 429, network, auth, refusal, invalid output) is
+   logged server-side and returns a *degraded* fallback turn: the coworker asks
+   the player to repeat, nothing is scored, conversation state is preserved,
+   HTTP stays 200. No key/stack/prompt ever reaches the client.
 
-No frontend, route, page, or component changes are required — the
-`AiTurnResult` + `TurnLanguageAnalysis` contract is already in place and the UI
-cannot tell the mock from the real thing.
+`gpt-4o-mini` default; `curriculum/` + a trimmed adapter are still duplicated in
+`backend/` (a shared workspace package is the eventual cleanup).
+
+Character art & backgrounds remain generated CSS placeholders until real files land.

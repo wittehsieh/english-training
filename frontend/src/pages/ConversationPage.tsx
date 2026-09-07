@@ -192,7 +192,11 @@ function ConversationScreen({
         }
       >
         {lastResult ? (
-          <LearningFeedback feedback={lastResult.learning} enabled={hintsEnabled} />
+          <LearningFeedback
+            feedback={lastResult.learning}
+            gap={lastResult.analysis.gap}
+            enabled={hintsEnabled}
+          />
         ) : null}
 
         {error ? <div className="banner banner--error">{error}</div> : null}

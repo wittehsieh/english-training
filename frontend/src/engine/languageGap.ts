@@ -15,6 +15,8 @@ import type {
  *  - Don't keep teaching something the player already demonstrates.
  * ======================================================================== */
 
+const clamp01 = (n: number): number => Math.max(0, Math.min(1, n));
+
 export function gapKey(concept: string): string {
   return concept
     .toLowerCase()
@@ -75,7 +77,7 @@ export function recordGapObservation(
       gapType: obs.gapType,
       priority: obs.priority,
       status: 'needs_practice',
-      confidence: 0.6,
+      confidence: clamp01(obs.confidence ?? 0.6),
       patternId: obs.patternId,
       sourceLessons: [lessonId],
       timesObserved: 1,

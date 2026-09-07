@@ -1,25 +1,26 @@
 import phrasePatternsJson from '../data/curriculum/phrasePatterns.json';
 import type {
   AiTurnResult,
+  CharacterEmotion,
   EvaluateContext,
   GapPriority,
   GapType,
   LanguageGapObservation,
-  LearningFeedback,
-  ResponseEvaluation,
   TurnLanguageAnalysis,
 } from '../types';
 import type { AIConversationService } from './AIConversationService';
+import { conceptKey, scoreTurn } from '../lib/turnScoring';
 
 /* ==========================================================================
  * MockAIConversationService
  *
- * Rule-based stand-in for the OpenAI evaluator, following learningModel.json:
- * infer intent -> judge meaning -> only surface a gap when the English really
- * fell short -> never require target expressions -> don't re-teach concepts
- * the learner is already comfortable with.
+ * Rule-based stand-in for the OpenAI evaluator. It produces a
+ * `TurnLanguageAnalysis` from regex rules; `scoreTurn` (shared with the OpenAI
+ * service) turns that into the final `AiTurnResult`, so both engines behave
+ * identically downstream.
  *
- * Throw-away once OpenAIConversationService is implemented.
+ * Kept for local dev, UI testing, offline work, automated tests, and to avoid
+ * API cost. Still selected automatically when `OPENAI_API_KEY` is absent.
  * ======================================================================== */
 
 const PATTERNS = (phrasePatternsJson as unknown as {
@@ -42,25 +43,35 @@ const GAP_RULES: GapRule[] = [
     concept: 'wait for + thing/person',
     patternId: 'wait-for',
     gapType: 'sentence_pattern',
-    priority: 'important',
+    priority: 'useful',
     test: /\bwait(ing)?\s+(the|a|my|your|his|her|their|it|feedback|him|them|response|reply|review)\b/i,
     unless: /\bwait(ing)?\s+for\b/i,
     better: (m) => m.replace(/\bwait(ing)?\s+/i, (s) => s.replace(/\s+$/, '') + ' for '),
-    explanation: 'In English you "wait for" something — the preposition is required.',
+    explanation: 'Use "wait for" when you are waiting for something or someone.',
   },
   {
     concept: 'by + deadline (not "until")',
     patternId: 'by-deadline',
     gapType: 'word_choice',
-    priority: 'important',
+    priority: 'useful',
     test: /\b(finish|done|ready|complete)\b[^.]*\buntil\b/i,
     better: (m) => m.replace(/\buntil\b/i, 'by'),
     explanation: 'For a completion deadline use "by Friday", not "until Friday".',
   },
   {
+    concept: 'explain + thing + to + person',
+    patternId: 'explain-to',
+    gapType: 'sentence_pattern',
+    priority: 'useful',
+    test: /\bexplain\s+(me|us|him|her|them)\b/i,
+    better: (m) =>
+      m.replace(/\bexplain\s+(me|us|him|her|them)\b/i, (_s, p: string) => `explain this to ${p}`),
+    explanation: 'It\'s "explain something to someone" — e.g. "explain this to me".',
+  },
+  {
     concept: 'be + almost done/finished',
     gapType: 'grammar',
-    priority: 'useful',
+    priority: 'optional',
     test: /\bi\s+almost\s+(finish|finished|done|complete)\b/i,
     better: () => "I'm almost done with it.",
     explanation: 'Use "I\'m almost done/finished with it" for something nearly complete.',
@@ -68,7 +79,7 @@ const GAP_RULES: GapRule[] = [
   {
     concept: 'be blocked on/by + thing',
     gapType: 'grammar',
-    priority: 'useful',
+    priority: 'optional',
     test: /\bi\s+(am\s+)?block(ed)?\s+(in|at|on the|by the)?\b/i,
     unless: /\bi'?m\s+blocked\s+(on|by)\b/i,
     better: () => "I'm blocked on the staging environment.",
@@ -86,10 +97,6 @@ const GAP_RULES: GapRule[] = [
 
 const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 
-function conceptKey(concept: string): string {
-  return concept.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-
 function inferIntent(message: string, fallback: string): string {
   const m = message.toLowerCase();
   if (/\bweekend|saturday|sunday\b/.test(m)) return 'talk about your weekend';
@@ -100,7 +107,25 @@ function inferIntent(message: string, fallback: string): string {
   return fallback.toLowerCase();
 }
 
-const ACK: Record<ResponseEvaluation['overall'], string[]> = {
+function detectPatternsUsed(message: string, excludePatternId?: string): string[] {
+  const lower = message.toLowerCase();
+  return [
+    ...new Set(
+      PATTERNS.filter((p) => {
+        if (p.id === excludePatternId) return false;
+        const head = p.pattern.split('+')[0]!.trim().toLowerCase();
+        if (head.length < 2) return false;
+        const re = new RegExp(
+          `\\b${head.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
+          'i',
+        );
+        return re.test(lower);
+      }).map((p) => p.id),
+    ),
+  ];
+}
+
+const ACK: Record<'excellent' | 'good' | 'ok' | 'poor', string[]> = {
   excellent: ['Nice — that’s really clear.', 'Got it, that makes total sense.'],
   good: ['Okay, got it.', 'Makes sense.'],
   ok: ['Right.', 'Mm-hm, okay.'],
@@ -118,23 +143,24 @@ export class MockAIConversationService implements AIConversationService {
   readonly name = 'mock';
 
   async evaluateTurn(context: EvaluateContext): Promise<AiTurnResult> {
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 250));
 
     const { lesson, playerMessage, completedObjectiveIds, playerTurnNumber, comfortableConcepts } =
       context;
-    const allIds = lesson.learningObjectives.map((o) => o.id);
+
     const openObjective =
       lesson.learningObjectives.find((o) => !completedObjectiveIds.includes(o.id)) ??
       lesson.learningObjectives[lesson.learningObjectives.length - 1]!;
 
     const words = wordCount(playerMessage);
     const meaningCommunicated = words >= 3;
+    const intent = inferIntent(playerMessage, openObjective.description);
 
     const rule = GAP_RULES.find(
       (r) => r.test.test(playerMessage) && !(r.unless && r.unless.test(playerMessage)),
     );
-    const suppressed = rule ? comfortableConcepts.includes(conceptKey(rule.concept)) : false;
-    const intent = inferIntent(playerMessage, openObjective.description);
+    const suppressed =
+      rule && comfortableConcepts.includes(conceptKey(rule.concept));
 
     let gap: LanguageGapObservation | null = null;
     if (rule && meaningCommunicated && !suppressed) {
@@ -147,111 +173,64 @@ export class MockAIConversationService implements AIConversationService {
         betterExpression: rule.better(playerMessage),
         patternId: rule.patternId,
         explanation: rule.explanation,
+        confidence: 0.82,
       };
     }
 
-    const lower = playerMessage.toLowerCase();
+    const hasContraction = /\b\w+'\w+\b/.test(playerMessage);
     const patternsUsedNaturally = gap
       ? []
-      : [
-          ...new Set(
-            PATTERNS.filter((p) => {
-              if (p.id === rule?.patternId) return false;
-              const head = p.pattern.split('+')[0]!.trim().toLowerCase();
-              if (head.length < 2) return false;
-              const re = new RegExp(
-                `\\b${head.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
-                'i',
-              );
-              return re.test(lower);
-            }).map((p) => p.id),
-          ),
-        ];
-
-    const grammar: ResponseEvaluation['grammar'] = rule
-      ? rule.gapType === 'grammar'
-        ? 'poor'
-        : 'ok'
-      : 'good';
-    const hasContraction = /\b\w+'\w+\b/.test(playerMessage);
-    const natural = !rule && (hasContraction || patternsUsedNaturally.length > 0) && words >= 4;
-
-    let overall: ResponseEvaluation['overall'] = 'ok';
-    if (!meaningCommunicated) overall = 'poor';
-    else if (!rule && natural) overall = 'excellent';
-    else if (!rule) overall = 'good';
-    else if (rule.priority === 'optional' || rule.priority === 'useful') overall = 'good';
-
-    const evaluation: ResponseEvaluation = {
-      overall,
-      meaningCorrect: meaningCommunicated,
-      grammar,
-      naturalness: natural ? 'natural' : 'ok',
-    };
+      : detectPatternsUsed(playerMessage, rule?.patternId);
+    const natural =
+      !rule && (hasContraction || patternsUsedNaturally.length > 0) && words >= 4;
 
     const analysis: TurnLanguageAnalysis = {
       understoodIntent: intent,
       meaningCommunicated,
-      grammarOk: grammar !== 'poor',
+      grammarOk: !(rule && rule.gapType === 'grammar'),
       natural,
       contextAppropriate: meaningCommunicated,
       gap,
       patternsUsedNaturally,
     };
 
-    const objectiveProgress: Record<string, boolean> = {};
-    for (const id of allIds) objectiveProgress[id] = completedObjectiveIds.includes(id);
-    if (meaningCommunicated && !objectiveProgress[openObjective.id]) {
-      objectiveProgress[openObjective.id] = true;
-    }
+    const scored = scoreTurn(context, analysis, {
+      advanceOpenObjectiveOnMeaning: true,
+    });
 
-    const requiredDone = lesson.completionCriteria.requiredObjectives.every(
-      (id) => objectiveProgress[id],
-    );
-    const lessonComplete =
-      requiredDone && playerTurnNumber >= lesson.completionCriteria.minimumTurns;
-
-    let xpEarned = { excellent: 15, good: 10, ok: 5, poor: 0 }[overall];
-    if (patternsUsedNaturally.length > 0) xpEarned += 10;
-    if (lessonComplete) xpEarned += lesson.xp;
-
-    const learning: LearningFeedback = gap
-      ? {
-          kind: 'correction',
-          shouldShow: true,
-          betterExpression: gap.betterExpression,
-          explanation: gap.explanation,
-        }
-      : { kind: 'none', shouldShow: false, betterExpression: null, explanation: null };
-
-    const ackPool = ACK[overall];
-    const ack = ackPool[playerTurnNumber % ackPool.length] ?? ackPool[0]!;
-    const completedCount = allIds.filter((id) => objectiveProgress[id]).length;
-    let text: string;
-    if (lessonComplete) {
-      text = `${ack} That’s everything I needed — thanks!`;
-    } else if (completedCount >= lesson.completionCriteria.requiredObjectives.length) {
-      text = `${ack} Anything else before we wrap up?`;
-    } else {
-      text = `${ack} ${FOLLOW_UPS[(playerTurnNumber + completedCount) % FOLLOW_UPS.length]!}`;
-    }
-
-    const emotion = lessonComplete
+    const emotion: CharacterEmotion = scored.lessonComplete
       ? 'happy'
-      : overall === 'excellent'
+      : scored.evaluation.overall === 'excellent'
         ? 'happy'
-        : overall === 'poor'
+        : scored.evaluation.overall === 'poor'
           ? 'concerned'
           : 'talking';
 
+    const ackPool = ACK[scored.evaluation.overall];
+    const ack = ackPool[playerTurnNumber % ackPool.length] ?? ackPool[0]!;
+    let text: string;
+    if (scored.lessonComplete) {
+      text = `${ack} That’s everything I needed — thanks!`;
+    } else if (
+      scored.completedObjectiveCount >= lesson.completionCriteria.requiredObjectives.length
+    ) {
+      text = `${ack} Anything else before we wrap up?`;
+    } else {
+      const follow =
+        FOLLOW_UPS[
+          (playerTurnNumber + scored.completedObjectiveCount) % FOLLOW_UPS.length
+        ]!;
+      text = `${ack} ${follow}`;
+    }
+
     return {
       characterResponse: { text, emotion },
-      evaluation,
-      analysis,
-      learning,
-      objectiveProgress,
-      lessonComplete,
-      xpEarned,
+      evaluation: scored.evaluation,
+      analysis: { ...analysis, gap: scored.gap },
+      learning: scored.learning,
+      objectiveProgress: scored.objectiveProgress,
+      lessonComplete: scored.lessonComplete,
+      xpEarned: scored.xpEarned,
     };
   }
 }

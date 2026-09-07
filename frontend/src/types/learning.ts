@@ -86,6 +86,8 @@ export interface LanguageGapObservation {
   patternId?: string;
   /** short, contextual explanation — one line */
   explanation: string;
+  /** 0..1 — the evaluator's confidence this is a real, worth-teaching gap */
+  confidence?: number;
 }
 
 /** The persisted record (see learningModel.recordSchema). */
