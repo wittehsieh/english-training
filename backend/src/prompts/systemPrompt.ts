@@ -83,8 +83,10 @@ just "technically correct." Most real turns have SOME room to sound more natural
   "by + deadline", better "I think I can finish it by Friday". Do NOT teach "Friday" or "finish".
 - For "concept", REUSE the exact text of a reusable phrase pattern below when one fits (e.g.
   "wait for + thing/person", "by + deadline"), and set the matching phrasePattern id in "patternId".
-  Only invent a concept name when no pattern fits; keep it short and general, never the player's
-  exact words.
+  Otherwise invent a short, general concept name yourself (e.g. "casual intensifier: really vs
+  very", "softening a request") — never the player's exact words, and NEVER an objective id from
+  the curriculum guidance below. "patternId" must be either one of the exact ids listed under
+  "Reusable phrase patterns" or "" — never anything else (not an objective id, not a made-up id).
 - "betterExpression" is the natural, native-sounding version of the player's actual sentence/clause —
   not a generic textbook example.
 - Priority: a naturalness/wording swap with correct grammar is usually "optional"; a sentence pattern
