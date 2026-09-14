@@ -13,6 +13,7 @@ import type {
 import type { AIConversationService } from './AIConversationService';
 import { conceptKey, scoreTurn } from '../lib/turnScoring';
 import {
+  detectLanguageUsed,
   evaluateProduction,
   getLibraryChunk,
   mockSituationFor,
@@ -161,7 +162,9 @@ export class MockAIConversationService implements AIConversationService {
       lesson.learningObjectives[lesson.learningObjectives.length - 1]!;
 
     const words = wordCount(playerMessage);
-    const meaningCommunicated = words >= 3;
+    const languageUsed = detectLanguageUsed(playerMessage);
+    // Reaching for the first language still communicates — it just isn't English.
+    const meaningCommunicated = languageUsed === 'english' ? words >= 3 : true;
     const intent = inferIntent(playerMessage, openObjective.description);
 
     const rule = GAP_RULES.find(
@@ -198,6 +201,7 @@ export class MockAIConversationService implements AIConversationService {
       grammarOk: !(rule && rule.gapType === 'grammar'),
       natural,
       contextAppropriate: meaningCommunicated,
+      languageUsed,
       gap,
       patternsUsedNaturally,
     };

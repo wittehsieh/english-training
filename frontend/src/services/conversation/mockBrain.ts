@@ -15,6 +15,7 @@ import type {
 import { PHRASE_PATTERNS } from '../../data/curriculum';
 import { getLibraryChunk } from '../../data/chunks';
 import {
+  detectLanguageUsed,
   evaluateProduction,
   mockSituationFor,
   routeChunk,
@@ -194,7 +195,9 @@ export function runMockBrain(input: BrainInput): AiTurnResult {
     lesson.learningObjectives[lesson.learningObjectives.length - 1]!;
 
   const words = wordCount(playerMessage);
-  const meaningCommunicated = words >= 3;
+  const languageUsed = detectLanguageUsed(playerMessage);
+  // Reaching for the first language still communicates — it just isn't English.
+  const meaningCommunicated = languageUsed === 'english' ? words >= 3 : true;
 
   const rule = GAP_RULES.find(
     (r) => r.test.test(playerMessage) && !(r.unless && r.unless.test(playerMessage)),
@@ -234,8 +237,12 @@ export function runMockBrain(input: BrainInput): AiTurnResult {
   const naturalness: ResponseEvaluation['naturalness'] = natural ? 'natural' : 'ok';
   const contextAppropriate = meaningCommunicated && !/\b(hey man|dude|whatever)\b/i.test(playerMessage);
 
+  // Mirrors the backend's scoreTurn(): reaching for the first language caps
+  // the rating at "ok" — never punished, but never mistaken for production.
+  const usedL1 = languageUsed !== 'english';
   let overall: ResponseEvaluation['overall'] = 'ok';
   if (!meaningCommunicated) overall = 'poor';
+  else if (usedL1) overall = 'ok';
   else if (!rule && natural) overall = 'excellent';
   else if (!rule) overall = 'good';
   else if (rule.priority === 'optional' || rule.priority === 'useful') overall = 'good';
@@ -251,10 +258,12 @@ export function runMockBrain(input: BrainInput): AiTurnResult {
     understoodIntent: intent,
     meaningCommunicated,
     grammarOk: grammar !== 'poor',
-    natural,
+    // Typing the first language is not producing English, whatever it says.
+    natural: languageUsed === 'english' && natural,
     contextAppropriate,
+    languageUsed,
     gap,
-    patternsUsedNaturally,
+    patternsUsedNaturally: languageUsed === 'english' ? patternsUsedNaturally : [],
   };
 
   // ---- objective progress -----------------------------------------------

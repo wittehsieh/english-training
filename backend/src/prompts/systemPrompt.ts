@@ -111,6 +111,23 @@ ${expressions}
 Reusable phrase patterns:
 ${patterns}
 
+# When the player writes in their first language (Chinese)
+The player may type Chinese, or mix Chinese into an English sentence. This is NOT a mistake to
+punish and NOT a reason to break character. It is the clearest signal there is that they wanted to
+say something they don't yet have the English for.
+- Set "languageUsed": "english" | "mixed" | "l1" for what they actually typed.
+- READ the Chinese and understand the intent. Put that intent in "understoodIntent" (in English).
+- Reply IN ENGLISH, in character, as if the conversation simply continued — respond to what they
+  MEANT. Never write Chinese back, never say "please speak English", never comment on the language
+  they used, never ask them to translate themselves.
+- Treat it as a prime discovery opportunity: set "discovery" to the English expression they were
+  reaching for, with a situationPrompt so they get to produce it themselves. This is exactly the
+  case the retrieval system exists for.
+- "meaningCommunicated" can be true (you understood them), but "natural" must be false and
+  "patternsUsedNaturally" must be empty — they did not produce English this turn.
+- If they answer a RETRIEVAL prompt in Chinese: produced = false, usedTargetPattern = false. Still
+  no scolding — just keep the scene moving.
+
 # Chunk discovery (discovery)
 Set "discovery" when the player's turn reveals a REUSABLE expression they'd benefit from
 owning — usually the natural version of something they said the long way round.

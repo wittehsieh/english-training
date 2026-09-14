@@ -57,6 +57,13 @@ export interface MasteryEvidence {
  * What the AI reports about ONE player turn. This is guidance produced fresh
  * each turn; only `gap !== null` turns become (or reinforce) a stored record.
  */
+/**
+ * What the player actually produced this turn. Typing in their first language
+ * is not a failure — it is the clearest possible signal of a language gap, so
+ * the engine treats it as "I wanted to say this but couldn't in English".
+ */
+export type LanguageUsed = 'english' | 'mixed' | 'l1';
+
 export interface TurnLanguageAnalysis {
   /** the AI's best guess at what the player was trying to say */
   understoodIntent: string;
@@ -64,6 +71,8 @@ export interface TurnLanguageAnalysis {
   grammarOk: boolean;
   natural: boolean;
   contextAppropriate: boolean;
+  /** english | mixed | l1 — l1/mixed means they reached past their English */
+  languageUsed: LanguageUsed;
   /** null => the player's English was fine; nothing to teach */
   gap: LanguageGapObservation | null;
   /**

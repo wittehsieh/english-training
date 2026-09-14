@@ -1,5 +1,14 @@
 import type { ChunkCategory, SkillId } from '../../types/chunk';
 import type { RetrievalEvaluation } from '../../types/conversation';
+import type { LanguageUsed } from '../../types/learning';
+/** CJK detection — the mock can't read Chinese, but it can spot it. */
+const CJK = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3040-\u30ff]/;
+
+export function detectLanguageUsed(message: string): LanguageUsed {
+  if (!CJK.test(message)) return 'english';
+  return /[a-z]{2,}/i.test(message) ? 'mixed' : 'l1';
+}
+
 
 /* ==========================================================================
  * Mock-side helpers for discovery + retrieval.

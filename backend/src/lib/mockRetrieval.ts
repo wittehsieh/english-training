@@ -1,5 +1,18 @@
 import chunkLibraryJson from '../data/chunks/chunkLibrary.json';
-import type { ChunkCategory, RetrievalEvaluation, SkillId } from '../types';
+import type {
+  ChunkCategory,
+  LanguageUsed,
+  RetrievalEvaluation,
+  SkillId,
+} from '../types';
+/** CJK detection — the mock can't read Chinese, but it can spot it. */
+const CJK = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3040-\u30ff]/;
+
+export function detectLanguageUsed(message: string): LanguageUsed {
+  if (!CJK.test(message)) return 'english';
+  return /[a-z]{2,}/i.test(message) ? 'mixed' : 'l1';
+}
+
 
 /** The curated chunk library, mirrored from the frontend. */
 export interface LibraryChunk {

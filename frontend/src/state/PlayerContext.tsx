@@ -209,7 +209,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         return {
           ...next,
           signals: computeSignals(next.chunkMastery, prev.signals, {
-            translationLikeTurn: !analysis.natural,
+            // Falling back to the first language is the strongest possible
+            // sign of translating rather than thinking in English.
+            translationLikeTurn:
+              analysis.languageUsed !== 'english' || !analysis.natural,
           }),
         };
       });

@@ -78,6 +78,9 @@ function deriveEvaluation(
   gap: LanguageGapObservation | null,
 ): ResponseEvaluation {
   const meaningCorrect = analysis.meaningCommunicated;
+  // Falling back to the first language means the English wasn't produced,
+  // however clear the intent was. It caps the rating but is never "wrong".
+  const usedL1 = analysis.languageUsed !== 'english';
 
   const grammar: ResponseEvaluation['grammar'] = !analysis.grammarOk
     ? 'poor'
@@ -87,12 +90,13 @@ function deriveEvaluation(
 
   const naturalness: ResponseEvaluation['naturalness'] = !meaningCorrect
     ? 'unnatural'
-    : analysis.natural
+    : analysis.natural && !usedL1
       ? 'natural'
       : 'ok';
 
   let overall: ResponseEvaluation['overall'];
   if (!meaningCorrect) overall = 'poor';
+  else if (usedL1) overall = 'ok';
   else if (gap && (gap.priority === 'important' || gap.priority === 'critical'))
     overall = 'ok';
   else if (gap) overall = 'good';
@@ -154,11 +158,12 @@ export function scoreTurn(
 
   const gap = suppressGap(analysis.gap, comfortableConcepts);
 
-  const patternsUsedNaturally = gap
-    ? []
-    : [...new Set(analysis.patternsUsedNaturally)].filter((id) =>
-        PATTERN_IDS.has(id),
-      );
+  const patternsUsedNaturally =
+    gap || analysis.languageUsed !== 'english'
+      ? []
+      : [...new Set(analysis.patternsUsedNaturally)].filter((id) =>
+          PATTERN_IDS.has(id),
+        );
 
   // ---- objective progress (server-authoritative) ----
   const allIds = lesson.learningObjectives.map((o) => o.id);

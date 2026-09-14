@@ -78,12 +78,21 @@ export interface LanguageGapObservation {
   confidence?: number;
 }
 
+/**
+ * What the player actually produced this turn. Typing in their first language
+ * is not a failure — it is the clearest possible signal of a language gap, so
+ * the engine treats it as "I wanted to say this but couldn't in English".
+ */
+export type LanguageUsed = 'english' | 'mixed' | 'l1';
+
 export interface TurnLanguageAnalysis {
   understoodIntent: string;
   meaningCommunicated: boolean;
   grammarOk: boolean;
   natural: boolean;
   contextAppropriate: boolean;
+  /** english | mixed | l1 — l1/mixed means they reached past their English */
+  languageUsed: LanguageUsed;
   gap: LanguageGapObservation | null;
   patternsUsedNaturally: string[];
 }

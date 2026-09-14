@@ -88,6 +88,8 @@ export const ModelTurnSchema = z.object({
     grammarOk: z.boolean(),
     natural: z.boolean(),
     contextAppropriate: z.boolean(),
+    /** what the player actually typed in */
+    languageUsed: z.enum(['english', 'mixed', 'l1']),
     gap: gapSchema.nullable(),
     patternsUsedNaturally: z.array(z.string()),
   }),
@@ -139,6 +141,7 @@ export function normalizeModelTurn(model: ModelTurn): NormalizedTurn {
       grammarOk: model.analysis.grammarOk,
       natural: model.analysis.natural,
       contextAppropriate: model.analysis.contextAppropriate,
+      languageUsed: model.analysis.languageUsed,
       patternsUsedNaturally: model.analysis.patternsUsedNaturally,
       gap: g
         ? {
@@ -172,6 +175,7 @@ export function fallbackModelTurn(_context: EvaluateContext): ModelTurn {
       grammarOk: true,
       natural: true,
       contextAppropriate: true,
+      languageUsed: 'english',
       gap: null,
       patternsUsedNaturally: [],
     },

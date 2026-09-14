@@ -17,6 +17,7 @@ const validTurn: ModelTurn = {
     grammarOk: true,
     natural: true,
     contextAppropriate: true,
+    languageUsed: 'english',
     gap: null,
     patternsUsedNaturally: ['working-on'],
   },
