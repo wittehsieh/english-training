@@ -1,38 +1,69 @@
 import { useMemo, useState } from 'react';
 import { usePlayer } from '../../state/PlayerContext';
-import type { MasteryStatus } from '../../types';
-import { LanguageGapCard } from './LanguageGapCard';
+import { CATEGORY_LABELS, type ChunkCategory, type MasteryStage } from '../../types';
+import { ChunkCard } from './ChunkCard';
 
-type Filter = 'open' | 'all' | 'closed';
+type Filter = 'working' | 'strong' | 'all';
 
-const OPEN: MasteryStatus[] = ['needs_practice', 'developing'];
+/** Stages that still need production practice. */
+const WORKING: MasteryStage[] = ['familiar', 'prompted', 'supported'];
 
 export function MyEnglishPanel() {
-  const { profile } = usePlayer();
-  const [filter, setFilter] = useState<Filter>('open');
+  const { profile, allChunks, getMastery } = usePlayer();
+  const [filter, setFilter] = useState<Filter>('working');
 
-  const gaps = useMemo(() => {
-    const sorted = [...profile.languageGaps].sort(
-      (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
-    );
-    if (filter === 'open') return sorted.filter((g) => OPEN.includes(g.status));
-    if (filter === 'closed') return sorted.filter((g) => !OPEN.includes(g.status));
-    return sorted;
-  }, [profile.languageGaps, filter]);
+  /** Only chunks the player has actually met — the library isn't a dictionary. */
+  const encountered = useMemo(() => {
+    const seen = new Set(profile.chunkMastery.map((m) => m.chunkId));
+    return allChunks
+      .filter((c) => seen.has(c.id))
+      .map((chunk) => ({ chunk, mastery: getMastery(chunk.id) }));
+  }, [allChunks, profile.chunkMastery, getMastery]);
 
   const counts = useMemo(() => {
-    const open = profile.languageGaps.filter((g) => OPEN.includes(g.status)).length;
-    return { open, total: profile.languageGaps.length, closed: profile.languageGaps.length - open };
-  }, [profile.languageGaps]);
+    const working = encountered.filter((e) =>
+      WORKING.includes(e.mastery?.currentStage ?? 'familiar'),
+    ).length;
+    return {
+      working,
+      strong: encountered.length - working,
+      total: encountered.length,
+    };
+  }, [encountered]);
 
-  if (profile.languageGaps.length === 0) {
+  const visible = useMemo(() => {
+    if (filter === 'working') {
+      return encountered.filter((e) =>
+        WORKING.includes(e.mastery?.currentStage ?? 'familiar'),
+      );
+    }
+    if (filter === 'strong') {
+      return encountered.filter(
+        (e) => !WORKING.includes(e.mastery?.currentStage ?? 'familiar'),
+      );
+    }
+    return encountered;
+  }, [encountered, filter]);
+
+  /** Grouped by category so it reads as an expression library, not a list. */
+  const grouped = useMemo(() => {
+    const map = new Map<ChunkCategory, typeof visible>();
+    for (const entry of visible) {
+      const list = map.get(entry.chunk.category) ?? [];
+      list.push(entry);
+      map.set(entry.chunk.category, list);
+    }
+    return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+  }, [visible]);
+
+  if (encountered.length === 0) {
     return (
       <div className="empty-state">
-        <p style={{ fontSize: 40, margin: 0 }}>🗒️</p>
+        <p style={{ fontSize: 40, margin: 0 }}>🧩</p>
         <p>
-          Nothing here yet. As you talk to coworkers, the specific things you
-          <i> tried</i> to say but couldn’t quite phrase get tracked here — not
-          every word you meet, just your personal gaps.
+          Nothing here yet. As you talk to coworkers, the expressions you reach
+          for — and the ones you don't have yet — collect here as a personal
+          library you can actually use.
         </p>
       </div>
     );
@@ -40,26 +71,57 @@ export function MyEnglishPanel() {
 
   return (
     <div>
-      <div className="segmented" role="group" aria-label="Filter" style={{ marginBottom: 16 }}>
-        <button type="button" aria-pressed={filter === 'open'} onClick={() => setFilter('open')}>
-          Working on ({counts.open})
+      <div
+        className="segmented"
+        role="group"
+        aria-label="Filter"
+        style={{ marginBottom: 16 }}
+      >
+        <button
+          type="button"
+          aria-pressed={filter === 'working'}
+          onClick={() => setFilter('working')}
+        >
+          Working on ({counts.working})
         </button>
-        <button type="button" aria-pressed={filter === 'closed'} onClick={() => setFilter('closed')}>
-          Getting there ({counts.closed})
+        <button
+          type="button"
+          aria-pressed={filter === 'strong'}
+          onClick={() => setFilter('strong')}
+        >
+          Strong ({counts.strong})
         </button>
-        <button type="button" aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>
+        <button
+          type="button"
+          aria-pressed={filter === 'all'}
+          onClick={() => setFilter('all')}
+        >
           All ({counts.total})
         </button>
       </div>
 
-      {gaps.length === 0 ? (
+      {grouped.length === 0 ? (
         <p className="faint">Nothing in this view.</p>
       ) : (
-        <div className="grid grid--auto">
-          {gaps.map((gap) => (
-            <LanguageGapCard key={gap.id} gap={gap} />
-          ))}
-        </div>
+        grouped.map(([category, entries]) => (
+          <section key={category} className="category-block">
+            <div className="category-block__head">
+              <h2>{CATEGORY_LABELS[category]}</h2>
+              <span className="faint" style={{ fontSize: 13 }}>
+                {entries.length}
+              </span>
+            </div>
+            <div className="grid grid--auto">
+              {entries.map(({ chunk, mastery }) => (
+                <ChunkCard
+                  key={chunk.id}
+                  chunk={chunk}
+                  {...(mastery ? { mastery } : {})}
+                />
+              ))}
+            </div>
+          </section>
+        ))
       )}
     </div>
   );

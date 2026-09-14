@@ -1,8 +1,14 @@
 import {
   DEFAULT_SETTINGS,
   EMPTY_PROFILE,
+  EMPTY_SIGNALS,
   type PlayerProfile,
 } from '../../types';
+import { ensureAllSkills } from '../../engine/mastery/weakness';
+import {
+  migrateLanguageGaps,
+  type LegacyLanguageGap,
+} from '../../engine/mastery/migrateLanguageGaps';
 
 /**
  * Single choke-point for persistence. Components never touch `localStorage`
@@ -15,6 +21,7 @@ export interface StorageService {
   clear(): void;
 }
 
+/** v1 = LanguageGap era. v2 = chunk + mastery era. */
 const PROFILE_KEY = 'wea:player-profile:v1';
 
 function safeParse(json: string | null): unknown {
@@ -26,18 +33,50 @@ function safeParse(json: string | null): unknown {
   }
 }
 
-/** Merge stored data over defaults so new fields don't break old saves. */
-function hydrate(stored: unknown): PlayerProfile {
+/** The v1 shape we may still find in a returning player's browser. */
+type StoredProfile = Partial<PlayerProfile> & {
+  languageGaps?: LegacyLanguageGap[];
+};
+
+/**
+ * Merge stored data over defaults so new fields never break old saves, then
+ * run the one-way LanguageGap -> chunk migration if this is a v1 profile.
+ * Migration preserves the player's earned history (see migrateLanguageGaps).
+ */
+export function hydrate(stored: unknown): PlayerProfile {
   if (!stored || typeof stored !== 'object') return { ...EMPTY_PROFILE };
-  const partial = stored as Partial<PlayerProfile>;
-  return {
+
+  // `languageGaps` is pulled OUT of the spread on purpose: if it rode along it
+  // would be re-migrated (and re-counted) on every single load.
+  const { languageGaps: legacyGaps, ...partial } = stored as StoredProfile;
+
+  let profile: PlayerProfile = {
     ...EMPTY_PROFILE,
     ...partial,
     settings: { ...DEFAULT_SETTINGS, ...(partial.settings ?? {}) },
     completedLessons: partial.completedLessons ?? [],
-    languageGaps: partial.languageGaps ?? [],
+    personalChunks: partial.personalChunks ?? [],
+    chunkMastery: partial.chunkMastery ?? [],
+    weakness: ensureAllSkills(partial.weakness ?? []),
+    signals: { ...EMPTY_SIGNALS, ...(partial.signals ?? {}) },
     chapterProgress: partial.chapterProgress ?? {},
   };
+
+  if (Array.isArray(legacyGaps) && legacyGaps.length > 0) {
+    const migrated = migrateLanguageGaps(
+      legacyGaps,
+      profile.personalChunks,
+      profile.chunkMastery,
+    );
+    profile = {
+      ...profile,
+      personalChunks: migrated.chunks,
+      chunkMastery: migrated.mastery,
+    };
+  }
+
+  // `languageGaps` is intentionally dropped — the chunk store replaces it.
+  return profile;
 }
 
 export class LocalStorageService implements StorageService {

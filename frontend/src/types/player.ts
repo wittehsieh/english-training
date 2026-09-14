@@ -1,4 +1,6 @@
-import type { LanguageGap } from './learning';
+import type { EnglishChunk } from './chunk';
+import type { ChunkMastery, LearnerSignals, WeaknessProfile } from './mastery';
+import { EMPTY_SIGNALS } from './mastery';
 
 export interface CompletedLessonRecord {
   lessonId: string;
@@ -11,8 +13,16 @@ export interface PlayerProfile {
   xp: number;
   level: number;
   completedLessons: CompletedLessonRecord[];
-  /** the Personal Language Gap store — the core learning record */
-  languageGaps: LanguageGap[];
+
+  /** chunks discovered from the player's own output (library chunks live in data/) */
+  personalChunks: EnglishChunk[];
+  /** retrieval mastery per chunk id — the core learning record */
+  chunkMastery: ChunkMastery[];
+  /** per-skill strength, used to bias future retrieval */
+  weakness: WeaknessProfile[];
+  /** coarse learner-level signals */
+  signals: LearnerSignals;
+
   /** chapter id -> number of completed lessons in that chapter */
   chapterProgress: Record<string, number>;
   settings: PlayerSettings;
@@ -34,7 +44,10 @@ export const EMPTY_PROFILE: PlayerProfile = {
   xp: 0,
   level: 1,
   completedLessons: [],
-  languageGaps: [],
+  personalChunks: [],
+  chunkMastery: [],
+  weakness: [],
+  signals: EMPTY_SIGNALS,
   chapterProgress: {},
   settings: DEFAULT_SETTINGS,
 };
