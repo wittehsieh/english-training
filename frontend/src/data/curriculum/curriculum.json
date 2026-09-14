@@ -25,6 +25,12 @@
             "I'm hoping to...",
             "I should be able to..."
           ],
+          "objectiveExpressions": {
+            "greet_coworker": "How's it going?",
+            "small_talk": "How was your weekend?",
+            "describe_current_work": "I'm working on...",
+            "describe_today_plan": "I'm planning to..."
+          },
           "difficulty": "easy",
           "xp": 20
         },
@@ -47,6 +53,12 @@
             "How about you?",
             "Did you...?"
           ],
+          "objectiveExpressions": {
+            "talk_about_past_events": "I went to...",
+            "ask_follow_up": "Did you...?",
+            "show_interest": "It was pretty fun.",
+            "keep_conversation_going": "How about you?"
+          },
           "difficulty": "easy",
           "xp": 20
         },
@@ -68,6 +80,12 @@
             "I've been...",
             "Anyway, I should get back to..."
           ],
+          "objectiveExpressions": {
+            "start_small_talk": "How's your day going?",
+            "respond_casually": "Not too bad.",
+            "ask_follow_up": "Busy morning?",
+            "end_conversation_naturally": "Anyway, I should get back to..."
+          },
           "difficulty": "easy",
           "xp": 20
         },
@@ -87,6 +105,11 @@
             "I'm trying to...",
             "I'm currently looking into..."
           ],
+          "objectiveExpressions": {
+            "describe_work": "I'm working on...",
+            "explain_current_task": "I'm trying to...",
+            "give_context": "I'm mainly responsible for..."
+          },
           "difficulty": "easy",
           "xp": 20
         },
@@ -106,6 +129,11 @@
             "I'm hoping to...",
             "If everything goes well..."
           ],
+          "objectiveExpressions": {
+            "describe_plan": "I'm planning to...",
+            "express_intention": "I'm going to...",
+            "express_uncertainty": "If everything goes well..."
+          },
           "difficulty": "easy",
           "xp": 20
         },
@@ -126,6 +154,12 @@
             "How about you?",
             "I've been meaning to..."
           ],
+          "objectiveExpressions": {
+            "respond_spontaneously": "How have you been?",
+            "ask_follow_up": "What have you been up to?",
+            "maintain_conversation": "How about you?",
+            "close_conversation": "I've been meaning to..."
+          },
           "difficulty": "easy",
           "xp": 25
         },
@@ -145,6 +179,11 @@
             "Are you available sometime today?",
             "When would be a good time to talk?"
           ],
+          "objectiveExpressions": {
+            "ask_availability": "Do you have a minute?",
+            "choose_politeness_level": "Are you available sometime today?",
+            "suggest_time": "When would be a good time to talk?"
+          },
           "difficulty": "medium",
           "xp": 25
         },
@@ -164,6 +203,11 @@
             "I'll get back to you.",
             "Let me finish this first."
           ],
+          "objectiveExpressions": {
+            "decline_temporarily": "I'm a little busy right now.",
+            "give_reason": "Let me finish this first.",
+            "suggest_follow_up": "Can we talk later?"
+          },
           "difficulty": "medium",
           "xp": 25
         },
@@ -183,6 +227,11 @@
             "I'm part of the...",
             "I'll be working closely with..."
           ],
+          "objectiveExpressions": {
+            "introduce_self": "I'm an engineer on...",
+            "describe_role": "I'm part of the...",
+            "describe_responsibility": "I mainly work on..."
+          },
           "difficulty": "medium",
           "xp": 25
         },
@@ -203,6 +252,11 @@
             "I'll probably be working with you on...",
             "Nice meeting you."
           ],
+          "objectiveExpressions": {
+            "ask_about_role": "What team are you on?",
+            "find_common_ground": "I'll probably be working with you on...",
+            "close_conversation": "Nice meeting you."
+          },
           "difficulty": "medium",
           "xp": 25
         }
@@ -230,6 +284,12 @@
             "I should have it done by...",
             "I'm aiming for..."
           ],
+          "objectiveExpressions": {
+            "describe_progress": "It's going pretty well.",
+            "describe_current_work": "I'm still working on...",
+            "explain_blocker": "I'm waiting for...",
+            "give_timeline": "I should have it done by..."
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -249,6 +309,11 @@
             "What's left is...",
             "The next step is..."
           ],
+          "objectiveExpressions": {
+            "summarize_status": "It's mostly done.",
+            "describe_remaining_work": "What's left is...",
+            "describe_next_step": "The next step is..."
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -269,6 +334,11 @@
             "The remaining work is...",
             "So basically..."
           ],
+          "objectiveExpressions": {
+            "explain_process": "So basically...",
+            "sequence_steps": "First...",
+            "give_context": "The main part is..."
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -288,6 +358,11 @@
             "The issue is...",
             "This is holding up..."
           ],
+          "objectiveExpressions": {
+            "identify_blocker": "I'm blocked by...",
+            "explain_cause": "The issue is...",
+            "explain_impact": "This is holding up..."
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -307,6 +382,11 @@
             "Would you have some time to...?",
             "I could use some help with..."
           ],
+          "objectiveExpressions": {
+            "ask_for_help": "Could you help me with...?",
+            "give_context": "I could use some help with...",
+            "make_specific_request": "Could you take a look at...?"
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -326,6 +406,11 @@
             "It might take a little longer.",
             "I'll have a better estimate by..."
           ],
+          "objectiveExpressions": {
+            "give_eta": "I should have it done by Friday.",
+            "express_confidence": "I think I can finish it this week.",
+            "express_uncertainty": "It might take a little longer."
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -345,6 +430,11 @@
             "We may need to push it back.",
             "I think we can still make it by..."
           ],
+          "objectiveExpressions": {
+            "report_delay": "We're a little behind schedule.",
+            "explain_reason": "We ran into an issue.",
+            "revise_timeline": "We may need to push it back."
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -364,6 +454,11 @@
             "If we want to keep the deadline...",
             "One option would be to..."
           ],
+          "objectiveExpressions": {
+            "discuss_impact": "How does that affect...?",
+            "negotiate_timeline": "We could push ... to later.",
+            "discuss_tradeoff": "If we want to keep the deadline..."
+          },
           "difficulty": "hard",
           "xp": 40
         },
@@ -383,6 +478,11 @@
             "It doesn't happen every time.",
             "The impact is..."
           ],
+          "objectiveExpressions": {
+            "describe_problem": "I'm seeing an issue with...",
+            "describe_reproduction": "I can reproduce it by...",
+            "describe_impact": "The impact is..."
+          },
           "difficulty": "medium",
           "xp": 35
         },
@@ -402,6 +502,11 @@
             "The issue appears to happen when...",
             "I'm not completely sure yet."
           ],
+          "objectiveExpressions": {
+            "describe_cause": "It seems to be related to...",
+            "express_evidence": "I noticed that...",
+            "express_uncertainty": "I'm not completely sure yet."
+          },
           "difficulty": "hard",
           "xp": 40
         },
@@ -421,6 +526,11 @@
             "What if we...?",
             "Another approach would be..."
           ],
+          "objectiveExpressions": {
+            "propose_solution": "I think we could...",
+            "compare_options": "Another approach would be...",
+            "soften_suggestion": "Maybe we should..."
+          },
           "difficulty": "hard",
           "xp": 40
         },
@@ -441,6 +551,12 @@
             "I need it before I can...",
             "No rush, but..."
           ],
+          "objectiveExpressions": {
+            "follow_up": "I just wanted to follow up on...",
+            "ask_status": "Do you have an update on...?",
+            "explain_dependency": "I need it before I can...",
+            "stay_polite": "No rush, but..."
+          },
           "difficulty": "hard",
           "xp": 40
         }

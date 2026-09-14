@@ -822,13 +822,6 @@ h3 {
 .vn-dialogue__hint b {
   color: var(--accent);
 }
-.vn-dialogue__hint--goal {
-  margin-top: 10px;
-  color: var(--text-dim);
-}
-.vn-dialogue__hint--goal b {
-  color: var(--text);
-}
 
 .vn-dialogue__foot {
   padding: 8px clamp(16px, 5vw, 32px) calc(12px + var(--safe-bottom));

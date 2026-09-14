@@ -182,9 +182,16 @@ function toRuntimeLesson(
   const openingEmotion: CharacterEmotion = override.openingEmotion ?? 'talking';
   const openingText = override.openingText ?? fallbackOpening(raw);
 
+  const resolvedExpressions = raw.targetExpressions.map(toTargetExpression);
+  // Curriculum data names the exact target expression that exemplifies each
+  // objective (see `objectiveExpressions`) — matched by text against the
+  // same pool, so the hint the player sees is never a guess.
+  const exampleByText = new Map(resolvedExpressions.map((e) => [e.text, e]));
+  const objectiveExpressions = raw.objectiveExpressions ?? {};
   const objectives: LearningObjective[] = raw.learningObjectives.map((id) => ({
     id,
     description: humanizeObjective(id),
+    example: exampleByText.get(objectiveExpressions[id] ?? ''),
   }));
 
   // Complete when the player has genuinely engaged every objective and had a
@@ -205,7 +212,7 @@ function toRuntimeLesson(
     scene: { id: `${background}-${raw.id}`, background, timeOfDay: 'morning' },
     characters: [characterFor(characterId, openingEmotion)],
     learningObjectives: objectives,
-    targetExpressions: raw.targetExpressions.map(toTargetExpression),
+    targetExpressions: resolvedExpressions,
     conversation: {
       opening: { characterId, text: openingText, emotion: openingEmotion },
     },

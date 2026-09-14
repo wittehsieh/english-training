@@ -7,22 +7,6 @@ import type { LearningObjective, Lesson, ObjectiveState, TargetExpression } from
  * in lesson order — makes the mission feel achievable instead of vague.
  * ======================================================================== */
 
-const STOP = new Set([
-  'the', 'a', 'an', 'to', 'of', 'and', 'or', 'is', 'are', 'be', 'your', 'you',
-  'it', 'this', 'that', 'with', 'for', 'on', 'in', 'at', 'what', 'how', 'do',
-  'did', 'does', 'not', 'if', 'so', 'up', 'about',
-]);
-
-function words(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[’']/g, '')
-    .replace(/\.\.\.|…/g, ' ')
-    .replace(/[^a-z\s]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length > 2 && !STOP.has(w));
-}
-
 /** The first objective the player has not demonstrated yet, in lesson order. */
 export function nextUnmetObjective(
   lesson: Lesson,
@@ -33,11 +17,16 @@ export function nextUnmetObjective(
 }
 
 /**
- * A best-effort example for the current objective, picked by keyword overlap
- * with its description. Curriculum data doesn't map expressions to objectives
- * 1:1, so this only returns something when it actually shares a real word
- * with the objective — an irrelevant guess is worse than no example at all,
- * and the "🎯 Try to" goal line already carries the hint on its own.
+ * A concrete example for the current objective. This used to be guessed by
+ * scoring keyword overlap between the (generic, humanized) objective
+ * description and each target expression — which routinely found no overlap
+ * and silently fell back to the same first expression for every objective in
+ * a lesson, making the hint look identical turn after turn.
+ *
+ * Curriculum data now names the expression explicitly per objective
+ * (`objectiveExpressions` in curriculum.json, resolved onto
+ * `objective.example` in the loader), so this is just a lookup with a
+ * fallback for the rare id a lesson hasn't mapped yet.
  */
 export function pickExampleExpression(
   lesson: Lesson,
@@ -45,21 +34,5 @@ export function pickExampleExpression(
 ): TargetExpression | null {
   const pool = lesson.targetExpressions;
   if (pool.length === 0) return null;
-  // No objective context at all (not even a "first objective") — a generic
-  // opener is reasonable here since there's nothing to score against.
-  if (!objective) return pool[0] ?? null;
-
-  const target = new Set(words(objective.description));
-  if (target.size === 0) return null;
-
-  let best: TargetExpression | null = null;
-  let bestScore = 0;
-  for (const expr of pool) {
-    const score = words(expr.text).filter((w) => target.has(w)).length;
-    if (score > bestScore) {
-      bestScore = score;
-      best = expr;
-    }
-  }
-  return best;
+  return objective?.example ?? pool[0] ?? null;
 }

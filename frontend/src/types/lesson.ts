@@ -38,6 +38,13 @@ export interface LessonCharacter {
 export interface LearningObjective {
   id: string;
   description: string;
+  /**
+   * The target expression curriculum data names as the example for this
+   * objective (`objectiveExpressions` in curriculum.json). Undefined when
+   * the curriculum hasn't defined one — callers fall back to a generic
+   * expression rather than guessing.
+   */
+  example?: TargetExpression;
 }
 
 export interface ConversationOpening {

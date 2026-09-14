@@ -39,24 +39,22 @@ test('the hint follows progress, not turn count', () => {
   assert.equal(afterFiveTurnsNoProgress?.id, 'greet_coworker');
 });
 
-test('picks a target expression that shares real words with the objective', () => {
+test('picks the expression curriculum data names for the objective', () => {
   const objective = lesson.learningObjectives.find((o) => o.id === 'describe_today_plan')!;
   const example = pickExampleExpression(lesson, objective);
+  // office-01's curriculum.json maps describe_today_plan -> "I'm planning to..."
+  // via `objectiveExpressions`, resolved onto `objective.example` by the loader.
+  assert.equal(example, objective.example);
   assert.ok(example, 'an example was found');
-  // office-01's expressions include "I'm planning to..." / "I'm hoping to..." /
-  // "I should be able to..." — all plausible for describing today's plan.
-  assert.ok(
-    /plan|hoping|today|should/i.test(example!.text),
-    `expected a plan-related expression, got "${example!.text}"`,
-  );
+  assert.equal(example!.text, "I'm planning to...");
 });
 
-test('returns nothing rather than an irrelevant guess', () => {
+test('an objective with no curriculum-defined example falls back to the first expression', () => {
   const example = pickExampleExpression(lesson, {
     id: 'x',
-    description: 'Zzz Qqq Xxx',
+    description: 'Some objective the curriculum never mapped',
   });
-  assert.equal(example, null, 'no shared words -> no misleading example');
+  assert.equal(example, lesson.targetExpressions[0]);
 });
 
 test('with no objective at all, still returns something to say', () => {

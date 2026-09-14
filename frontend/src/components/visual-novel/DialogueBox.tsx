@@ -8,9 +8,7 @@ interface DialogueBoxProps {
   speakerName: string;
   speakerRole?: string;
   waiting: boolean;
-  /** what the player still needs to do, in lesson order — the goal itself */
-  objectiveHint?: string;
-  /** a best-effort example expression for that goal — not the only answer */
+  /** a best-effort example expression for the current goal — not the only answer */
   hint?: string;
   reducedMotion: boolean;
   children: ReactNode;
@@ -26,7 +24,6 @@ export function DialogueBox({
   speakerName,
   speakerRole,
   waiting,
-  objectiveHint,
   hint,
   reducedMotion,
   children,
@@ -76,12 +73,6 @@ export function DialogueBox({
             {!done ? <span className="vn-dialogue__caret" aria-hidden="true" /> : null}
           </p>
         )}
-
-        {objectiveHint && !isPlayer && done && !waiting ? (
-          <p className="vn-dialogue__hint vn-dialogue__hint--goal">
-            🎯 Try to: <b>{objectiveHint}</b>
-          </p>
-        ) : null}
 
         {hint && !isPlayer && done && !waiting ? (
           <p className="vn-dialogue__hint">

@@ -246,13 +246,6 @@ function ConversationScreen({
         speakerRole={speaker?.role}
         waiting={phase === 'sending'}
         reducedMotion={reducedMotion}
-        objectiveHint={
-          // While retrieving, the lesson's nudge would give the game away —
-          // the RetrievalBar owns hinting during that beat.
-          hintsEnabled && !retrieval && !pendingDiscovery && lastTurn?.speaker === 'character'
-            ? nextObjective?.description
-            : undefined
-        }
         hint={
           hintsEnabled && !retrieval && !pendingDiscovery && lastTurn?.speaker === 'character'
             ? hintExpression?.text

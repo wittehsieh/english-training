@@ -18,6 +18,13 @@ export interface CurriculumLesson {
    * NEVER an answer key — the player is not required to use these.
    */
   targetExpressions: string[];
+  /**
+   * objective id -> the one `targetExpressions` entry (exact text) that best
+   * exemplifies it. This is what the in-game hint shows for that objective.
+   * Optional per objective (and per lesson) — an id with no entry here falls
+   * back to the lesson's first target expression rather than a guess.
+   */
+  objectiveExpressions?: Record<string, string>;
   difficulty: CurriculumDifficulty;
   xp: number;
 }
