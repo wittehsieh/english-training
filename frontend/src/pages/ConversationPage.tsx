@@ -74,7 +74,6 @@ export function ConversationPage() {
           lessonId: lesson.id,
           chapterId: lesson.chapterId,
           score: summary.score,
-          xpEarned: summary.xpEarned,
         });
         navigate(`/result/${lesson.id}`, { state: summary });
       }}

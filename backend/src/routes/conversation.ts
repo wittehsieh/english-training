@@ -72,7 +72,6 @@ conversationRouter.post(
       ),
       identifiedGaps: [],
       patternsUsedNaturally: [],
-      xp: 0,
       status: 'active',
     };
     res.json(state);

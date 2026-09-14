@@ -103,7 +103,6 @@ test('9. lesson completion needs required objectives AND minimum turns', async (
     }),
   );
   assert.equal(done.lessonComplete, true);
-  assert.ok(done.xpEarned >= 35, 'completion should add lesson xp');
 });
 
 test('does not complete just because a target expression was used', async () => {

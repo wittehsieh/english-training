@@ -37,7 +37,6 @@ export interface LessonBrief {
   };
   completionCriteria: { requiredObjectives: string[]; minimumTurns: number };
   characters: { id: string; name: string; role: string; personality: string[] }[];
-  xp: number;
 }
 
 export type Speaker = 'character' | 'player';
@@ -104,7 +103,6 @@ export interface ConversationState {
   objectives: Record<string, { completed: boolean }>;
   identifiedGaps: LanguageGapObservation[];
   patternsUsedNaturally: string[];
-  xp: number;
   status: ConversationStatus;
 }
 
@@ -206,7 +204,6 @@ export interface AiTurnResult {
   learning: LearningFeedback;
   objectiveProgress: Record<string, boolean>;
   lessonComplete: boolean;
-  xpEarned: number;
   discovery: ChunkDiscovery | null;
   retrievalEvaluation: RetrievalEvaluation | null;
 }

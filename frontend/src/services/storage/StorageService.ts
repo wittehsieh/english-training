@@ -33,9 +33,15 @@ function safeParse(json: string | null): unknown {
   }
 }
 
-/** The v1 shape we may still find in a returning player's browser. */
+/**
+ * The v1 shape we may still find in a returning player's browser — includes
+ * fields the current PlayerProfile no longer has at all (xp/level were a
+ * gamification layer that was removed outright, not just hidden).
+ */
 type StoredProfile = Partial<PlayerProfile> & {
   languageGaps?: LegacyLanguageGap[];
+  xp?: number;
+  level?: number;
 };
 
 /**
@@ -46,9 +52,13 @@ type StoredProfile = Partial<PlayerProfile> & {
 export function hydrate(stored: unknown): PlayerProfile {
   if (!stored || typeof stored !== 'object') return { ...EMPTY_PROFILE };
 
-  // `languageGaps` is pulled OUT of the spread on purpose: if it rode along it
-  // would be re-migrated (and re-counted) on every single load.
-  const { languageGaps: legacyGaps, ...partial } = stored as StoredProfile;
+  // Pulled OUT of the spread on purpose, not just left untyped:
+  //   - `languageGaps` re-migrating (and re-counting) on every load
+  //   - `xp` / `level` are a removed gamification layer — a real object read
+  //     back from localStorage still has them even though the type doesn't,
+  //     so they must be discarded explicitly or they silently ride along.
+  const { languageGaps: legacyGaps, xp: _xp, level: _level, ...partial } =
+    stored as StoredProfile;
 
   let profile: PlayerProfile = {
     ...EMPTY_PROFILE,

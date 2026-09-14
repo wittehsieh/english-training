@@ -38,16 +38,12 @@ export function ResultPage() {
 
       <div className="card">
         <div className="stat-row">
-          <span>XP earned</span>
-          <b>+{summary.xpEarned}</b>
-        </div>
-        <div className="stat-row">
           <span>Turns</span>
           <b>{summary.turns}</b>
         </div>
         <div className="stat-row">
-          <span>Total XP</span>
-          <b>{profile.xp}</b>
+          <span>Episodes completed</span>
+          <b>{profile.completedLessons.length}</b>
         </div>
       </div>
 

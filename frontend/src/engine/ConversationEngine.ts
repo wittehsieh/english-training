@@ -182,7 +182,6 @@ export class ConversationEngine {
       objectives,
       identifiedGaps,
       patternsUsedNaturally,
-      xp: this.conversationState.xp + result.xpEarned,
       status: result.lessonComplete ? 'complete' : 'active',
     };
   }

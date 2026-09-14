@@ -18,7 +18,6 @@ import {
 import { computeSignals, recordSkillAttempt } from '../engine/mastery/weakness';
 import {
   EMPTY_PROFILE,
-  levelForXp,
   type ChunkMastery,
   type CompletedLessonRecord,
   type EnglishChunk,
@@ -32,12 +31,10 @@ export interface CompleteLessonInput {
   lessonId: string;
   chapterId: string;
   score: number;
-  xpEarned: number;
 }
 
 interface PlayerContextValue {
   profile: PlayerProfile;
-  level: number;
   /** every chunk the player could be working on: library + personal */
   allChunks: EnglishChunk[];
   getChunk: (chunkId: string) => EnglishChunk | undefined;
@@ -244,7 +241,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       const record: CompletedLessonRecord = {
         lessonId: input.lessonId,
         score: input.score,
-        xpEarned: input.xpEarned,
         completedAt: new Date().toISOString(),
       };
 
@@ -254,11 +250,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           (chapterProgress[input.chapterId] ?? 0) + 1;
       }
 
-      const xp = prev.xp + input.xpEarned;
       return {
         ...prev,
-        xp,
-        level: levelForXp(xp),
         completedLessons: alreadyDone
           ? prev.completedLessons.map((l) =>
               l.lessonId === input.lessonId ? record : l,
@@ -299,7 +292,6 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const value = useMemo<PlayerContextValue>(
     () => ({
       profile,
-      level: levelForXp(profile.xp),
       allChunks,
       getChunk,
       getMastery,

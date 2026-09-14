@@ -281,11 +281,6 @@ export function runMockBrain(input: BrainInput): AiTurnResult {
   const lessonComplete =
     requiredDone && playerTurnNumber >= lesson.completionCriteria.minimumTurns;
 
-  // ---- xp -------------------------------------------------------------
-  let xpEarned = { excellent: 15, good: 10, ok: 5, poor: 0 }[overall];
-  if (patternsUsedNaturally.length > 0) xpEarned += 10;
-  if (lessonComplete) xpEarned += lesson.xp;
-
   // ---- learning feedback (subtle) -------------------------------------
   const learning: LearningFeedback = gap
     ? {
@@ -373,7 +368,6 @@ export function runMockBrain(input: BrainInput): AiTurnResult {
     learning,
     objectiveProgress,
     lessonComplete,
-    xpEarned,
     discovery,
     retrievalEvaluation,
   };

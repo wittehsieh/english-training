@@ -1,6 +1,4 @@
 import { NavLink, Link, Outlet } from 'react-router-dom';
-import { usePlayer } from '../../state/PlayerContext';
-import { levelForXp } from '../../types';
 
 const NAV = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
@@ -12,19 +10,12 @@ const NAV = [
 
 /** Chrome shown on every screen except the full-screen conversation. */
 export function Layout() {
-  const { profile } = usePlayer();
-
   return (
     <div className="app-shell">
       <header className="topbar">
         <Link to="/" className="topbar__brand">
           🗨️ Workplace <span>English</span>
         </Link>
-        <div className="topbar__hud">
-          <span>Lv {levelForXp(profile.xp)}</span>
-          <span className="faint">·</span>
-          <span>⭐ {profile.xp}</span>
-        </div>
       </header>
 
       <main className="app-main">

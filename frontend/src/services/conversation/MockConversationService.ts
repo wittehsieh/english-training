@@ -68,7 +68,6 @@ export class MockConversationService implements ConversationService {
       ),
       identifiedGaps: [],
       patternsUsedNaturally: [],
-      xp: 0,
       status: 'active',
     };
   }

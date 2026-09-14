@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { LESSONS } from '../data/lessons';
 import { Button } from '../components/common/Button';
-import { XPBar } from '../components/progress/XPBar';
 import { usePlayer } from '../state/PlayerContext';
 
 export function HomePage() {
@@ -10,7 +9,8 @@ export function HomePage() {
 
   const nextLesson =
     LESSONS.find((l) => !isLessonCompleted(l.id)) ?? LESSONS[0];
-  const started = profile.xp > 0 || profile.completedLessons.length > 0;
+  const started =
+    profile.completedLessons.length > 0 || profile.chunkMastery.length > 0;
 
   return (
     <div>
@@ -48,12 +48,6 @@ export function HomePage() {
           </Button>
         </div>
       </div>
-
-      {started ? (
-        <div className="card" style={{ maxWidth: 420, margin: '0 auto' }}>
-          <XPBar xp={profile.xp} />
-        </div>
-      ) : null}
     </div>
   );
 }

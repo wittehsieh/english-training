@@ -5,7 +5,7 @@ export function ProgressPage() {
     <div>
       <div className="page-head">
         <h1>Progress</h1>
-        <p>Your XP, level, and how far you've gotten through each category.</p>
+        <p>Your story progress, and how your English is actually developing.</p>
       </div>
       <ProgressPanel />
     </div>

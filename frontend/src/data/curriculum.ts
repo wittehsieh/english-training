@@ -202,7 +202,6 @@ function toRuntimeLesson(
     description: raw.mission,
     difficulty: raw.difficulty,
     estimatedMinutes: MINUTES_BY_DIFFICULTY[raw.difficulty],
-    xp: raw.xp,
     scene: { id: `${background}-${raw.id}`, background, timeOfDay: 'morning' },
     characters: [characterFor(characterId, openingEmotion)],
     learningObjectives: objectives,

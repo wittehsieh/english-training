@@ -8,9 +8,8 @@ import type { EvaluateContext, TurnLanguageAnalysis } from '../types';
  * from `AiTurnResult`:
  *   - `objectiveProgress` is a string[] (`demonstratedObjectiveIds`), not a map
  *     — open-ended maps don't play well with strict JSON schema.
- *   - no `evaluation` / `learning` / `xpEarned` / `lessonComplete` — those are
- *     derived server-side by `scoreTurn` so completion and XP stay
- *     authoritative.
+ *   - no `evaluation` / `learning` / `lessonComplete` — those are derived
+ *     server-side by `scoreTurn` so completion stays authoritative.
  * `normalizeModelTurn()` maps this into a `TurnLanguageAnalysis`.
  * ======================================================================== */
 

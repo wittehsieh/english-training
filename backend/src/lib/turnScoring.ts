@@ -38,7 +38,6 @@ export interface ScoredTurn {
   objectiveProgress: Record<string, boolean>;
   completedObjectiveCount: number;
   lessonComplete: boolean;
-  xpEarned: number;
 }
 
 interface ScoreOptions {
@@ -152,7 +151,6 @@ export function scoreTurn(
       objectiveProgress,
       completedObjectiveCount: Object.values(objectiveProgress).filter(Boolean).length,
       lessonComplete: false,
-      xpEarned: 0,
     };
   }
 
@@ -191,11 +189,6 @@ export function scoreTurn(
   const evaluation = deriveEvaluation(analysis, gap);
   const learning = deriveLearning(gap, patternsUsedNaturally);
 
-  // ---- XP (existing formula — no new system) ----
-  let xpEarned = { excellent: 15, good: 10, ok: 5, poor: 0 }[evaluation.overall];
-  if (patternsUsedNaturally.length > 0) xpEarned += 10;
-  if (lessonComplete) xpEarned += lesson.xp;
-
   return {
     gap,
     patternsUsedNaturally,
@@ -204,6 +197,5 @@ export function scoreTurn(
     objectiveProgress,
     completedObjectiveCount,
     lessonComplete,
-    xpEarned,
   };
 }

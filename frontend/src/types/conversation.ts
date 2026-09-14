@@ -27,7 +27,6 @@ export interface ConversationState {
   identifiedGaps: LanguageGapObservation[];
   /** phrase-pattern ids the player used naturally this conversation */
   patternsUsedNaturally: string[];
-  xp: number;
   status: ConversationStatus;
 }
 
@@ -101,7 +100,6 @@ export interface AiTurnResult {
   learning: LearningFeedback;
   objectiveProgress: Record<string, boolean>;
   lessonComplete: boolean;
-  xpEarned: number;
   /** set when the evaluator proposes a chunk worth training */
   discovery: ChunkDiscovery | null;
   /** set only when this turn was answering a retrieval prompt */

@@ -5,13 +5,10 @@ import { EMPTY_SIGNALS } from './mastery';
 export interface CompletedLessonRecord {
   lessonId: string;
   score: number;
-  xpEarned: number;
   completedAt: string;
 }
 
 export interface PlayerProfile {
-  xp: number;
-  level: number;
   completedLessons: CompletedLessonRecord[];
 
   /** chunks discovered from the player's own output (library chunks live in data/) */
@@ -41,8 +38,6 @@ export const DEFAULT_SETTINGS: PlayerSettings = {
 };
 
 export const EMPTY_PROFILE: PlayerProfile = {
-  xp: 0,
-  level: 1,
   completedLessons: [],
   personalChunks: [],
   chunkMastery: [],
@@ -51,12 +46,3 @@ export const EMPTY_PROFILE: PlayerProfile = {
   chapterProgress: {},
   settings: DEFAULT_SETTINGS,
 };
-
-/** 250 XP per level. */
-export function levelForXp(xp: number): number {
-  return Math.floor(xp / 250) + 1;
-}
-
-export function xpWithinLevel(xp: number): { current: number; needed: number } {
-  return { current: xp % 250, needed: 250 };
-}

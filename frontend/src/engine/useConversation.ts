@@ -26,7 +26,6 @@ import { buildHint, type Hint } from './retrieval/hints';
 export interface LessonSummary {
   lessonId: string;
   score: number;
-  xpEarned: number;
   turns: number;
   ratings: ResponseEvaluation['overall'][];
   /** gaps surfaced this lesson (subset shown on the result screen) */
@@ -99,7 +98,6 @@ function buildSummary(
   return {
     lessonId: lesson.id,
     score,
-    xpEarned: engine.state.xp,
     turns: engine.getProgress().playerTurns,
     ratings,
     identifiedGaps: engine.state.identifiedGaps,

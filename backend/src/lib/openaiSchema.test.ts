@@ -56,7 +56,6 @@ test('10d. fallback turn is itself valid and harmless', () => {
   const { analysis, demonstratedObjectiveIds } = normalizeModelTurn(fb);
   const scored = scoreTurn(ctx, analysis, { demonstratedObjectiveIds, degraded: true });
   assert.equal(scored.gap, null);
-  assert.equal(scored.xpEarned, 0);
   assert.equal(scored.lessonComplete, false);
   assert.deepEqual(
     Object.values(scored.objectiveProgress).filter(Boolean),

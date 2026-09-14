@@ -137,7 +137,6 @@ export class OpenAIConversationService implements AIConversationService {
       learning: scored.learning,
       objectiveProgress: scored.objectiveProgress,
       lessonComplete: scored.lessonComplete,
-      xpEarned: scored.xpEarned,
       // Degraded turns must never trigger a learning moment.
       discovery: degraded ? null : discovery,
       retrievalEvaluation: degraded ? null : retrievalEvaluation,

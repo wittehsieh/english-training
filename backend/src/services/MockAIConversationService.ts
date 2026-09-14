@@ -287,7 +287,6 @@ export class MockAIConversationService implements AIConversationService {
       learning: scored.learning,
       objectiveProgress: scored.objectiveProgress,
       lessonComplete: scored.lessonComplete,
-      xpEarned: scored.xpEarned,
       discovery,
       retrievalEvaluation,
     };

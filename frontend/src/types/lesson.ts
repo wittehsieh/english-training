@@ -61,7 +61,6 @@ export interface Lesson {
   description: string;
   difficulty: Difficulty;
   estimatedMinutes: number;
-  xp: number;
   scene: LessonScene;
   characters: LessonCharacter[];
   learningObjectives: LearningObjective[];

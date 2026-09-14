@@ -2,19 +2,16 @@ import { CHAPTERS, LESSONS } from '../../data/curriculum';
 import { usePlayer } from '../../state/PlayerContext';
 import { weakestSkills } from '../../engine/mastery/weakness';
 import {
-  levelForXp,
   SKILL_LABELS,
   STAGE_ICONS,
   STAGE_LABELS,
   type MasteryStage,
 } from '../../types';
-import { XPBar } from './XPBar';
 
 const WORKING: MasteryStage[] = ['familiar', 'prompted', 'supported'];
 
 export function ProgressPanel() {
   const { profile } = usePlayer();
-  const level = levelForXp(profile.xp);
   const mastery = profile.chunkMastery;
 
   const working = mastery.filter((m) => WORKING.includes(m.currentStage));
@@ -37,17 +34,6 @@ export function ProgressPanel() {
           <b>
             {profile.completedLessons.length} / {LESSONS.length}
           </b>
-        </div>
-        <div className="stat-row">
-          <span>Level</span>
-          <b>{level}</b>
-        </div>
-        <div className="stat-row">
-          <span>Total XP</span>
-          <b>{profile.xp}</b>
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <XPBar xp={profile.xp} />
         </div>
       </div>
 
@@ -92,8 +78,8 @@ export function ProgressPanel() {
                       {s.successes}/{s.attempts}
                     </span>
                   </div>
-                  <div className="xpbar">
-                    <div className="xpbar__fill" style={{ width: `${pct}%` }} />
+                  <div className="meter">
+                    <div className="meter__fill" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );

@@ -106,7 +106,6 @@ function toBrief(raw: RawLesson, chapter: RawChapter): LessonBrief {
     characters: [
       { id: opening.characterId, name: character.name, role: character.role, personality: character.personality },
     ],
-    xp: raw.xp,
   };
 }
 
