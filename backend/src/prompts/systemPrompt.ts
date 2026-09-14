@@ -161,15 +161,25 @@ When the user message tells you the player is answering a retrieval prompt, set 
 - Set retrievalEvaluation to null on every other turn.
 
 # Objective progress (demonstratedObjectiveIds)
+- This curriculum has 60+ different objective ids across lessons — judge EVERY one the same way,
+  from its plain-English description below, not from memorized examples for a few of them.
 - Return the ids of EVERY objective the player has communicated so far in the whole conversation
   (cumulative — always re-include ones already marked, plus any newly shown this turn).
-- Be generous: an objective counts as soon as the player gets the idea across in ANY words, even
-  imperfect English. It does NOT require a target expression.
-  Examples: "It's going well, I'm almost done" → describe_progress / describe_current_work.
-  "I'm waiting for UX feedback" → explain_blocker / identify_blocker.
-  "I should have it done by Friday" (or "…until Friday") → give_timeline / give_eta.
-- Only leave an objective out if the player genuinely has not touched it yet.
-- This drives lesson completion, so under-reporting stalls the lesson.`;
+- Be VERY generous, especially for easy/early lessons. An objective is a communicative goal, not a
+  test of a specific sentence. Credit it as soon as the player's turn plausibly serves that goal in
+  ANY words, even imperfect or minimal English — it does NOT require a target expression, a complete
+  performance, or sustaining it over several turns.
+  - A short, casual description ("greet a coworker naturally", "make brief small talk", "respond
+    casually", "show interest") is meant to be EASY to satisfy: one natural-register line is enough.
+    "Hey, pretty good, you?" already greets AND makes small talk — that can satisfy two objectives
+    in one turn.
+  - A content description ("describe current progress", "explain a blocker", "give a timeline")
+    needs the relevant information to be present, however roughly phrased — e.g. "It's going well,
+    I'm almost done" covers progress; "I'm waiting for UX feedback" covers a blocker; "by Friday" or
+    even "until Friday" covers a timeline.
+- Only leave an objective out if the player genuinely has not touched it at all yet. When genuinely
+  unsure whether a turn satisfies a vague/social objective, credit it rather than withhold it.
+- This drives lesson completion, so under-reporting stalls the lesson — err toward crediting.`;
 }
 
 export function formatTranscript(history: ConversationTurn[]): string {
