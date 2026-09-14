@@ -14,6 +14,7 @@ import {
   type LessonSummary,
 } from '../engine/useConversation';
 import { recordEncounter } from '../engine/mastery/chunkMastery';
+import { nextUnmetObjective, pickExampleExpression } from '../engine/nextHint';
 import { usePlayer } from '../state/PlayerContext';
 import type { CharacterExpression, TurnLanguageAnalysis } from '../types';
 
@@ -107,7 +108,6 @@ function ConversationScreen({
     phase,
     error,
     state,
-    progress,
     lastResult,
     summary,
     send,
@@ -171,11 +171,10 @@ function ConversationScreen({
     );
   }, [turns, phase, sceneChar]);
 
-  const playerTurns = progress?.playerTurns ?? 0;
-  const hintExpression =
-    lesson.targetExpressions[
-      Math.min(playerTurns, lesson.targetExpressions.length - 1)
-    ];
+  // Hint tracks what's actually still missing, in lesson order — not a raw
+  // turn count — so it stays useful as objectives get checked off.
+  const nextObjective = nextUnmetObjective(lesson, state?.objectives);
+  const hintExpression = pickExampleExpression(lesson, nextObjective);
   const busy = phase === 'sending' || phase === 'loading' || phase === 'complete';
 
   if (phase === 'error' && !state) {
@@ -220,10 +219,17 @@ function ConversationScreen({
             <div className="vn-hud__objectives">
               {lesson.learningObjectives.map((objective) => {
                 const done = state?.objectives[objective.id]?.completed;
+                const current = !done && objective.id === nextObjective?.id;
                 return (
                   <span
                     key={objective.id}
-                    className={`objective-pip${done ? ' objective-pip--done' : ''}`}
+                    className={[
+                      'objective-pip',
+                      done ? 'objective-pip--done' : '',
+                      current ? 'objective-pip--current' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                   >
                     {done ? '✓' : '○'} {objective.description}
                   </span>
@@ -240,9 +246,14 @@ function ConversationScreen({
         speakerRole={speaker?.role}
         waiting={phase === 'sending'}
         reducedMotion={reducedMotion}
+        objectiveHint={
+          // While retrieving, the lesson's nudge would give the game away —
+          // the RetrievalBar owns hinting during that beat.
+          hintsEnabled && !retrieval && !pendingDiscovery && lastTurn?.speaker === 'character'
+            ? nextObjective?.description
+            : undefined
+        }
         hint={
-          // While retrieving, the lesson's target-expression nudge would give
-          // the game away — the RetrievalBar owns hinting instead.
           hintsEnabled && !retrieval && !pendingDiscovery && lastTurn?.speaker === 'character'
             ? hintExpression?.text
             : undefined

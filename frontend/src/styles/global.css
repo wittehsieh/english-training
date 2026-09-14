@@ -752,6 +752,11 @@ h3 {
   color: var(--good);
   border-color: var(--good);
 }
+.objective-pip--current {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(125, 146, 255, 0.16);
+}
 
 /* ---- dialogue ---- */
 
@@ -816,6 +821,13 @@ h3 {
 }
 .vn-dialogue__hint b {
   color: var(--accent);
+}
+.vn-dialogue__hint--goal {
+  margin-top: 10px;
+  color: var(--text-dim);
+}
+.vn-dialogue__hint--goal b {
+  color: var(--text);
 }
 
 .vn-dialogue__foot {
