@@ -122,6 +122,74 @@ export interface LearningFeedback {
   explanation: string | null;
 }
 
+/* ---- chunk discovery + retrieval (M2) ---- */
+
+export type ChunkCategory =
+  | 'progress'
+  | 'uncertainty'
+  | 'clarification'
+  | 'suggestion'
+  | 'disagreement'
+  | 'problem'
+  | 'timeline'
+  | 'opinion'
+  | 'small_talk'
+  | 'other';
+
+export type SkillId =
+  | 'expressing_uncertainty'
+  | 'asking_clarification'
+  | 'making_suggestions'
+  | 'softening_disagreement'
+  | 'explaining_progress'
+  | 'explaining_blockers'
+  | 'giving_opinions'
+  | 'giving_timeline'
+  | 'small_talk'
+  | 'handling_misunderstanding'
+  | 'following_up'
+  | 'asking_for_help';
+
+export type RetrievalStage = 'prompted' | 'supported' | 'independent';
+
+export type HintLevel =
+  | 'none'
+  | 'context'
+  | 'semantic'
+  | 'partial'
+  | 'first_word'
+  | 'full_answer';
+
+/** A reusable expression the evaluator proposes training. */
+export interface ChunkDiscovery {
+  phrase: string;
+  pattern: string;
+  meaning: string;
+  usage: string;
+  category: ChunkCategory;
+  skill: SkillId;
+  /** a NEW situation requiring the expression — never "repeat after me" */
+  situationPrompt: string;
+}
+
+/** The evaluator's read on a retrieval attempt; the client owns the mastery. */
+export interface RetrievalEvaluation {
+  produced: boolean;
+  usedTargetPattern: boolean;
+  note: string;
+}
+
+/** What the client sends when the player is mid-retrieval. */
+export interface RetrievalRequestContext {
+  targetChunkId: string;
+  targetPhrase: string;
+  targetPattern?: string;
+  stage: RetrievalStage;
+  hintLevel: HintLevel;
+  situation: string;
+  context?: Record<string, string>;
+}
+
 export interface AiTurnResult {
   characterResponse: { text: string; emotion: CharacterEmotion };
   evaluation: ResponseEvaluation;
@@ -130,6 +198,8 @@ export interface AiTurnResult {
   objectiveProgress: Record<string, boolean>;
   lessonComplete: boolean;
   xpEarned: number;
+  discovery: ChunkDiscovery | null;
+  retrievalEvaluation: RetrievalEvaluation | null;
 }
 
 export interface StartConversationRequest {
@@ -148,6 +218,7 @@ export interface SendMessageRequest {
    */
   history?: ConversationTurn[];
   completedObjectiveIds?: string[];
+  retrieval?: RetrievalRequestContext;
 }
 
 export interface ConversationTurnResponse {
@@ -164,4 +235,6 @@ export interface EvaluateContext {
   completedObjectiveIds: string[];
   playerTurnNumber: number;
   comfortableConcepts: string[];
+  /** set only when this message answers a retrieval prompt */
+  retrieval?: RetrievalRequestContext;
 }

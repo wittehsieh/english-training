@@ -1,0 +1,523 @@
+{
+  "version": "1.0",
+  "note": "Curated starter chunk library. Every entry must be a REUSABLE, generative pattern — never a single fixed sentence. The 10 ids that also exist in curriculum/phrasePatterns.json are kept identical so migrated LanguageGaps merge onto the same chunk.",
+  "chunks": [
+    {
+      "id": "working-on",
+      "phrase": "I'm working on...",
+      "pattern": "I'm working on + NOUN",
+      "meaning": "Say which task currently has your attention.",
+      "usage": "The default answer when someone asks what you're doing right now.",
+      "category": "progress",
+      "skill": "explaining_progress",
+      "examples": [
+        "I'm working on the payment flow.",
+        "I'm working on the API cleanup this week.",
+        "I'm working on a fix for that crash."
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "still-working-on",
+      "phrase": "I'm still working on...",
+      "pattern": "I'm still working on + NOUN",
+      "meaning": "It isn't finished yet and you're actively on it.",
+      "usage": "Use it when someone expected it to be done — it signals progress without promising completion.",
+      "category": "progress",
+      "skill": "explaining_progress",
+      "examples": [
+        "I'm still working on the animation.",
+        "I'm still working on it — a couple of edge cases left.",
+        "I'm still working on the migration script."
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "almost-done",
+      "phrase": "I'm almost done with...",
+      "pattern": "I'm almost done with + NOUN",
+      "meaning": "Nearly finished, only small things left.",
+      "usage": "Softer and more natural than saying a percentage.",
+      "category": "progress",
+      "skill": "explaining_progress",
+      "examples": [
+        "I'm almost done with the report.",
+        "I'm almost done with it — just cleaning up the tests.",
+        "I'm almost done with the first version."
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "on-track-to",
+      "phrase": "I'm on track to...",
+      "pattern": "I'm on track to + VERB",
+      "meaning": "Progress matches the plan; the deadline still looks safe.",
+      "usage": "Reassures a PM or manager without over-promising.",
+      "category": "progress",
+      "skill": "explaining_progress",
+      "examples": [
+        "I'm on track to finish by Thursday.",
+        "We're on track to ship this sprint.",
+        "I'm on track to have it ready for review tomorrow."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "havent-had-much-time-to",
+      "phrase": "I haven't had much time to...",
+      "pattern": "I haven't had much time to + VERB",
+      "meaning": "You haven't been able to get to it yet, without sounding like an excuse.",
+      "usage": "The natural workplace alternative to \"I don't have enough time to...\".",
+      "category": "progress",
+      "skill": "explaining_progress",
+      "examples": [
+        "I haven't had much time to look into it.",
+        "I haven't had much time to review the PR yet.",
+        "I haven't had much time to dig into the logs."
+      ],
+      "difficulty": "intermediate"
+    },
+
+    {
+      "id": "not-sure-how-to",
+      "phrase": "I'm not sure how to...",
+      "pattern": "I'm not sure how to + VERB",
+      "meaning": "You don't know the best way to do something.",
+      "usage": "Admits uncertainty about method without sounding incapable.",
+      "category": "uncertainty",
+      "skill": "expressing_uncertainty",
+      "examples": [
+        "I'm not sure how to explain it clearly.",
+        "I'm not sure how to reproduce the bug.",
+        "I'm not sure how to bring it up with the client."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "not-sure-if",
+      "phrase": "I'm not sure if...",
+      "pattern": "I'm not sure if + CLAUSE",
+      "meaning": "You don't know whether something is true or will happen.",
+      "usage": "Use it to flag doubt before committing to an answer.",
+      "category": "uncertainty",
+      "skill": "expressing_uncertainty",
+      "examples": [
+        "I'm not sure if that's the root cause.",
+        "I'm not sure if we can make it by Friday.",
+        "I'm not sure if she's already seen the message."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "not-sure-what",
+      "phrase": "I'm not sure what...",
+      "pattern": "I'm not sure what + CLAUSE",
+      "meaning": "You don't know which thing / which action applies.",
+      "usage": "The natural fix for \"I don't know what should I do.\"",
+      "category": "uncertainty",
+      "skill": "expressing_uncertainty",
+      "examples": [
+        "I'm not sure what we should do next.",
+        "I'm not sure what's causing it.",
+        "I'm not sure what he meant by that."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "not-quite-sure",
+      "phrase": "I'm not quite sure...",
+      "pattern": "I'm not quite sure + CLAUSE",
+      "meaning": "A softer, slightly more hedged version of \"I'm not sure\".",
+      "usage": "Good when you want to sound thoughtful rather than blank.",
+      "category": "uncertainty",
+      "skill": "expressing_uncertainty",
+      "examples": [
+        "I'm not quite sure yet — let me check.",
+        "I'm not quite sure that's the whole picture.",
+        "I'm not quite sure how long it'll take."
+      ],
+      "difficulty": "intermediate"
+    },
+
+    {
+      "id": "just-to-make-sure",
+      "phrase": "Just to make sure...",
+      "pattern": "Just to make sure + CLAUSE",
+      "meaning": "You're confirming your understanding before moving on.",
+      "usage": "Prevents misunderstandings without implying the other person was unclear.",
+      "category": "clarification",
+      "skill": "asking_clarification",
+      "examples": [
+        "Just to make sure I understand, you want the old flow removed?",
+        "Just to make sure we're aligned — this ships next week?",
+        "Just to make sure, should I include the mobile version too?"
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "make-sure-clause",
+      "phrase": "I want to make sure...",
+      "pattern": "I want to make sure + CLAUSE",
+      "meaning": "You're signalling that getting this right matters to you.",
+      "usage": "Slightly more deliberate than \"Just to make sure...\".",
+      "category": "clarification",
+      "skill": "asking_clarification",
+      "examples": [
+        "I want to make sure I understand the requirement.",
+        "I want to make sure we're not duplicating work.",
+        "I want to make sure this is what you had in mind."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "do-you-mean",
+      "phrase": "Do you mean...?",
+      "pattern": "Do you mean + NOUN/CLAUSE?",
+      "meaning": "Check a specific interpretation of what was just said.",
+      "usage": "More natural than \"What is your meaning?\".",
+      "category": "clarification",
+      "skill": "asking_clarification",
+      "examples": [
+        "Do you mean the whole page, or just the header?",
+        "Do you mean we should postpone the release?",
+        "Do you mean the staging environment?"
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "could-you-clarify",
+      "phrase": "Could you clarify...?",
+      "pattern": "Could you clarify + NOUN/CLAUSE?",
+      "meaning": "Politely ask for a vague point to be made specific.",
+      "usage": "Works well in meetings and with clients.",
+      "category": "clarification",
+      "skill": "asking_clarification",
+      "examples": [
+        "Could you clarify what you mean by \"soon\"?",
+        "Could you clarify which part is blocking?",
+        "Could you clarify the scope a bit?"
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "explain-to",
+      "phrase": "Could you explain ... to me?",
+      "pattern": "explain + THING + to + PERSON",
+      "meaning": "Ask someone to walk you through something.",
+      "usage": "The preposition matters — \"explain me this\" is a very common mistake.",
+      "category": "clarification",
+      "skill": "asking_clarification",
+      "examples": [
+        "Could you explain this requirement to me?",
+        "Can you explain the flow to the new engineer?",
+        "Let me explain the trade-off to the team."
+      ],
+      "difficulty": "beginner"
+    },
+
+    {
+      "id": "running-into-issue",
+      "phrase": "We're running into an issue with...",
+      "pattern": "running into an issue with + NOUN",
+      "meaning": "Report a problem that has come up during the work.",
+      "usage": "Neutral framing — states the problem without assigning blame.",
+      "category": "problem",
+      "skill": "explaining_blockers",
+      "examples": [
+        "We're running into an issue with the payment provider.",
+        "I'm running into an issue with the build.",
+        "We ran into an issue with the migration last night."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "main-issue-is",
+      "phrase": "The main issue is...",
+      "pattern": "The main issue is + NOUN/CLAUSE",
+      "meaning": "Point at the single most important part of a problem.",
+      "usage": "Use it to cut through a messy explanation.",
+      "category": "problem",
+      "skill": "explaining_blockers",
+      "examples": [
+        "The main issue is that the API times out under load.",
+        "The main issue is the missing test data.",
+        "The main issue is we don't have access yet."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "having-trouble-with",
+      "phrase": "I'm having trouble with...",
+      "pattern": "I'm having trouble with + NOUN",
+      "meaning": "Something is giving you difficulty right now.",
+      "usage": "Honest and natural — better than \"I have a difficulty\".",
+      "category": "problem",
+      "skill": "explaining_blockers",
+      "examples": [
+        "I'm having trouble with the deployment script.",
+        "I'm having trouble with the new auth flow.",
+        "I'm having trouble with getting it to run locally."
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "it-looks-like",
+      "phrase": "It looks like...",
+      "pattern": "It looks like + CLAUSE",
+      "meaning": "Offer a likely explanation without claiming certainty.",
+      "usage": "Very common when reporting findings that aren't confirmed yet.",
+      "category": "problem",
+      "skill": "explaining_blockers",
+      "examples": [
+        "It looks like the issue is in the animation layer.",
+        "It looks like the cache isn't being cleared.",
+        "It looks like it only happens on mobile."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "wait-for",
+      "phrase": "I'm waiting for...",
+      "pattern": "wait for + THING/PERSON",
+      "meaning": "Your progress depends on someone or something else.",
+      "usage": "The preposition is required — \"waiting the feedback\" is a common mistake. \"Waiting on\" also works.",
+      "category": "problem",
+      "skill": "explaining_blockers",
+      "examples": [
+        "I'm waiting for the UX feedback.",
+        "I'm waiting on Alex to review the PR.",
+        "We're waiting for the client to confirm."
+      ],
+      "difficulty": "beginner"
+    },
+
+    {
+      "id": "maybe-we-could",
+      "phrase": "Maybe we could...",
+      "pattern": "Maybe we could + VERB",
+      "meaning": "Float an idea without pushing it.",
+      "usage": "Low-pressure way to open a suggestion in a meeting.",
+      "category": "suggestion",
+      "skill": "making_suggestions",
+      "examples": [
+        "Maybe we could split it into two tickets.",
+        "Maybe we could ship the basic version first.",
+        "Maybe we could ask design for a quick review."
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "one-option",
+      "phrase": "One option would be to...",
+      "pattern": "One option would be to + VERB",
+      "meaning": "Present one possibility among several.",
+      "usage": "Signals you've thought about alternatives — good with managers.",
+      "category": "suggestion",
+      "skill": "making_suggestions",
+      "examples": [
+        "One option would be to push the feature to the next release.",
+        "One option would be to cache the results.",
+        "One option would be to handle it manually for now."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "what-if-we",
+      "phrase": "What if we...?",
+      "pattern": "What if we + VERB?",
+      "meaning": "Invite the other person to consider an idea with you.",
+      "usage": "More collaborative than stating the suggestion flatly.",
+      "category": "suggestion",
+      "skill": "making_suggestions",
+      "examples": [
+        "What if we move the deadline by a week?",
+        "What if we only support the top three browsers?",
+        "What if we ask the client first?"
+      ],
+      "difficulty": "beginner"
+    },
+
+    {
+      "id": "not-best-approach",
+      "phrase": "I'm not sure that's the best approach.",
+      "pattern": "I'm not sure that's the best + NOUN",
+      "meaning": "Disagree without saying \"no\" or \"you're wrong\".",
+      "usage": "The standard soft disagreement in professional English.",
+      "category": "disagreement",
+      "skill": "softening_disagreement",
+      "examples": [
+        "I'm not sure that's the best approach for mobile.",
+        "I'm not sure that's the best option right now.",
+        "I'm not sure that's the best place to put it."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "see-your-point-but",
+      "phrase": "I see your point, but...",
+      "pattern": "I see your point, but + CLAUSE",
+      "meaning": "Acknowledge their view before offering yours.",
+      "usage": "Keeps disagreement collaborative rather than confrontational.",
+      "category": "disagreement",
+      "skill": "softening_disagreement",
+      "examples": [
+        "I see your point, but that would delay the release.",
+        "I see your point, but we'd have to rewrite the parser.",
+        "I see your point — I'm just worried about the timeline."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "concerned-about",
+      "phrase": "I'm a little concerned about...",
+      "pattern": "I'm a little concerned about + NOUN",
+      "meaning": "Raise a worry gently.",
+      "usage": "\"A little\" does the softening — it makes a strong concern sayable.",
+      "category": "disagreement",
+      "skill": "softening_disagreement",
+      "examples": [
+        "I'm a little concerned about the performance impact.",
+        "I'm a little concerned about the timeline.",
+        "I'm a little concerned about how this scales."
+      ],
+      "difficulty": "advanced"
+    },
+
+    {
+      "id": "by-deadline",
+      "phrase": "I should have it done by...",
+      "pattern": "by + DEADLINE (not \"until\")",
+      "meaning": "Give a completion date with a little room.",
+      "usage": "\"by Friday\" means on or before Friday; \"until Friday\" is a common mistake here.",
+      "category": "timeline",
+      "skill": "giving_timeline",
+      "examples": [
+        "I should have it done by Friday.",
+        "I can get it to you by the end of the day.",
+        "We should have the fix out by tomorrow morning."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "should-be-able-to",
+      "phrase": "We should be able to...",
+      "pattern": "We should be able to + VERB",
+      "meaning": "Likely, but not a hard promise.",
+      "usage": "Useful when you're fairly confident but don't want to commit absolutely.",
+      "category": "timeline",
+      "skill": "giving_timeline",
+      "examples": [
+        "We should be able to finish this sprint.",
+        "I should be able to get to it this afternoon.",
+        "We should be able to support both formats."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "aiming-for",
+      "phrase": "I'm aiming for...",
+      "pattern": "aiming for + TARGET",
+      "meaning": "State your target date as a goal, not a guarantee.",
+      "usage": "Honest framing when the date could still move.",
+      "category": "timeline",
+      "skill": "giving_timeline",
+      "examples": [
+        "I'm aiming for Friday.",
+        "We're aiming for the end of the week.",
+        "I'm aiming to have a draft ready tomorrow."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "looking-at",
+      "phrase": "We're looking at...",
+      "pattern": "We're looking at + TIME/AMOUNT",
+      "meaning": "Give a rough estimate of time or size.",
+      "usage": "Common when the number is approximate.",
+      "category": "timeline",
+      "skill": "giving_timeline",
+      "examples": [
+        "We're looking at about two weeks.",
+        "We're looking at early next month.",
+        "We're probably looking at a couple more days."
+      ],
+      "difficulty": "advanced"
+    },
+
+    {
+      "id": "had-a-chance-to",
+      "phrase": "Have you had a chance to...?",
+      "pattern": "Have you had a chance to + VERB?",
+      "meaning": "Ask whether someone has done something, without pressuring them.",
+      "usage": "The polite way to chase something — it builds in the excuse of being busy.",
+      "category": "other",
+      "skill": "following_up",
+      "examples": [
+        "Have you had a chance to look at the PR?",
+        "Have you had a chance to review the doc?",
+        "Have you had a chance to talk to the client yet?"
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "follow-up-on",
+      "phrase": "I wanted to follow up on...",
+      "pattern": "follow up on + TOPIC",
+      "meaning": "Reopen something that was discussed before.",
+      "usage": "Standard opener for a chasing message or a second conversation.",
+      "category": "other",
+      "skill": "following_up",
+      "examples": [
+        "I wanted to follow up on the design feedback.",
+        "Just following up on my message from yesterday.",
+        "I'm following up on the access request."
+      ],
+      "difficulty": "intermediate"
+    },
+    {
+      "id": "look-into-it",
+      "phrase": "I'll look into it.",
+      "pattern": "look into + NOUN",
+      "meaning": "Commit to investigating without promising a fix yet.",
+      "usage": "\"Look into\" is much more natural than \"investigate\" in everyday work talk.",
+      "category": "other",
+      "skill": "following_up",
+      "examples": [
+        "I'll look into it this afternoon.",
+        "Let me look into the error logs.",
+        "I'll look into why it's failing on mobile."
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "get-back-to-you",
+      "phrase": "I'll get back to you on that.",
+      "pattern": "get back to + PERSON + on + TOPIC",
+      "meaning": "You'll answer later once you know more.",
+      "usage": "Buys time politely instead of guessing.",
+      "category": "other",
+      "skill": "following_up",
+      "examples": [
+        "I'll get back to you on that by tomorrow.",
+        "Let me check and get back to you.",
+        "I'll get back to you once I've talked to the team."
+      ],
+      "difficulty": "beginner"
+    },
+    {
+      "id": "take-a-look-at",
+      "phrase": "Could you take a look at...?",
+      "pattern": "take a look at + NOUN",
+      "meaning": "Ask someone to review or check something.",
+      "usage": "Lighter than \"review\" — easy to say no to, so it feels less demanding.",
+      "category": "other",
+      "skill": "asking_for_help",
+      "examples": [
+        "Could you take a look at this when you get a chance?",
+        "Do you mind taking a look at the PR?",
+        "Can you take a look at the error I'm getting?"
+      ],
+      "difficulty": "beginner"
+    }
+  ]
+}

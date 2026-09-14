@@ -48,6 +48,35 @@ const gapSchema = z.object({
   patternId: z.string(),
 });
 
+const chunkCategory = z.enum([
+  'progress', 'uncertainty', 'clarification', 'suggestion', 'disagreement',
+  'problem', 'timeline', 'opinion', 'small_talk', 'other',
+]);
+
+const skillId = z.enum([
+  'expressing_uncertainty', 'asking_clarification', 'making_suggestions',
+  'softening_disagreement', 'explaining_progress', 'explaining_blockers',
+  'giving_opinions', 'giving_timeline', 'small_talk',
+  'handling_misunderstanding', 'following_up', 'asking_for_help',
+]);
+
+const discoverySchema = z.object({
+  phrase: z.string(),
+  pattern: z.string(),
+  meaning: z.string(),
+  usage: z.string(),
+  category: chunkCategory,
+  skill: skillId,
+  /** a NEW situation requiring the expression — never "repeat after me" */
+  situationPrompt: z.string(),
+});
+
+const retrievalEvaluationSchema = z.object({
+  produced: z.boolean(),
+  usedTargetPattern: z.boolean(),
+  note: z.string(),
+});
+
 export const ModelTurnSchema = z.object({
   characterResponse: z.object({
     text: z.string().min(1),
@@ -63,6 +92,10 @@ export const ModelTurnSchema = z.object({
     patternsUsedNaturally: z.array(z.string()),
   }),
   demonstratedObjectiveIds: z.array(z.string()),
+  /** non-null only when proposing an expression worth training */
+  discovery: discoverySchema.nullable(),
+  /** non-null only when the player was answering a retrieval prompt */
+  retrievalEvaluation: retrievalEvaluationSchema.nullable(),
 });
 
 export type ModelTurn = z.infer<typeof ModelTurnSchema>;
@@ -84,6 +117,8 @@ export interface NormalizedTurn {
   analysis: TurnLanguageAnalysis;
   characterResponse: ModelTurn['characterResponse'];
   demonstratedObjectiveIds: string[];
+  discovery: ModelTurn['discovery'];
+  retrievalEvaluation: ModelTurn['retrievalEvaluation'];
 }
 
 /** Map validated model output into the shared `TurnLanguageAnalysis`. */
@@ -92,6 +127,12 @@ export function normalizeModelTurn(model: ModelTurn): NormalizedTurn {
   return {
     characterResponse: model.characterResponse,
     demonstratedObjectiveIds: model.demonstratedObjectiveIds,
+    // A discovery with no situation can't drive a retrieval, so drop it.
+    discovery:
+      model.discovery && model.discovery.phrase.trim() && model.discovery.situationPrompt.trim()
+        ? model.discovery
+        : null,
+    retrievalEvaluation: model.retrievalEvaluation,
     analysis: {
       understoodIntent: model.analysis.understoodIntent,
       meaningCommunicated: model.analysis.meaningCommunicated,
@@ -135,5 +176,7 @@ export function fallbackModelTurn(_context: EvaluateContext): ModelTurn {
       patternsUsedNaturally: [],
     },
     demonstratedObjectiveIds: [],
+    discovery: null,
+    retrievalEvaluation: null,
   };
 }

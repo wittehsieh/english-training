@@ -1,5 +1,7 @@
 import type { CharacterEmotion } from './lesson';
 import type { LanguageGapObservation, TurnLanguageAnalysis } from './learning';
+import type { ChunkCategory, RetrievalContext, SkillId } from './chunk';
+import type { HintLevel, RetrievalStage } from './mastery';
 
 export type Speaker = 'character' | 'player';
 
@@ -63,6 +65,33 @@ export interface CharacterResponse {
   emotion: CharacterEmotion;
 }
 
+/**
+ * A reusable expression the evaluator spotted in (or just out of reach of) the
+ * player's own output. The client Learning Engine decides whether to act on it.
+ */
+export interface ChunkDiscovery {
+  phrase: string;
+  pattern: string;
+  meaning: string;
+  usage: string;
+  category: ChunkCategory;
+  skill: SkillId;
+  /**
+   * A NEW situation from the same NPC that would naturally require this
+   * expression — never a request to repeat it back.
+   */
+  situationPrompt: string;
+}
+
+/** The evaluator's read on a retrieval attempt (client decides the mastery). */
+export interface RetrievalEvaluation {
+  /** did the player communicate the intended meaning at all */
+  produced: boolean;
+  /** did they actually reach for the target pattern */
+  usedTargetPattern: boolean;
+  note: string;
+}
+
 export interface AiTurnResult {
   characterResponse: CharacterResponse;
   evaluation: ResponseEvaluation;
@@ -73,6 +102,23 @@ export interface AiTurnResult {
   objectiveProgress: Record<string, boolean>;
   lessonComplete: boolean;
   xpEarned: number;
+  /** set when the evaluator proposes a chunk worth training */
+  discovery: ChunkDiscovery | null;
+  /** set only when this turn was answering a retrieval prompt */
+  retrievalEvaluation: RetrievalEvaluation | null;
+}
+
+/** What the client tells the backend when the player is mid-retrieval. */
+export interface RetrievalRequestContext {
+  targetChunkId: string;
+  targetPhrase: string;
+  targetPattern?: string;
+  stage: RetrievalStage;
+  hintLevel: HintLevel;
+  /** the situation the NPC posed */
+  situation: string;
+  /** variation metadata — stored now, varied in M3 */
+  context: RetrievalContext;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -100,6 +146,12 @@ export interface SendMessageRequest {
    */
   history?: ConversationTurn[];
   completedObjectiveIds?: string[];
+  /**
+   * Present only when this message is the player's answer to a retrieval
+   * prompt. The client owns the retrieval state machine; the backend just
+   * needs to know what to evaluate against.
+   */
+  retrieval?: RetrievalRequestContext;
 }
 
 export interface ConversationTurnResponse {

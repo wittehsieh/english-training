@@ -3,6 +3,7 @@ import type {
   ConversationState,
   ConversationTurn,
   Lesson,
+  RetrievalRequestContext,
 } from '../types';
 import {
   ConversationError,
@@ -83,7 +84,30 @@ export class ConversationEngine {
    * appends the character's reply. Throws {@link ConversationError} on failure
    * (the player turn is rolled back so they can retry).
    */
-  async send(rawMessage: string): Promise<AiTurnResult> {
+  /**
+   * Speak as the NPC without calling the service — used to pose a retrieval
+   * situation, which the Learning Engine (not the model) decides to inject.
+   */
+  pushCharacterTurn(text: string, characterId: string, emotion?: ConversationTurn['emotion']): void {
+    this.conversationState = {
+      ...this.conversationState,
+      turns: [
+        ...this.conversationState.turns,
+        {
+          id: localTurnId(),
+          speaker: 'character',
+          characterId,
+          text,
+          ...(emotion ? { emotion } : {}),
+        },
+      ],
+    };
+  }
+
+  async send(
+    rawMessage: string,
+    opts: { retrieval?: RetrievalRequestContext } = {},
+  ): Promise<AiTurnResult> {
     const message = rawMessage.trim();
     if (!message) {
       throw new ConversationError('Type something before sending.', 'input');
@@ -114,6 +138,7 @@ export class ConversationEngine {
         completedObjectiveIds: Object.entries(this.conversationState.objectives)
           .filter(([, o]) => o.completed)
           .map(([objectiveId]) => objectiveId),
+        ...(opts.retrieval ? { retrieval: opts.retrieval } : {}),
       });
       this.applyResult(response.turn, response.result);
       return response.result;

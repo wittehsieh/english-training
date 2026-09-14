@@ -6,6 +6,7 @@ interface PlayerInputProps {
   /** optional secondary actions */
   onHint?: () => void;
   suggestion?: string | null;
+  placeholder?: string;
 }
 
 /**
@@ -18,6 +19,7 @@ export function PlayerInput({
   onSend,
   onHint,
   suggestion,
+  placeholder = 'Type your response in English…',
 }: PlayerInputProps) {
   const [value, setValue] = useState('');
 
@@ -42,7 +44,7 @@ export function PlayerInput({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Type your response in English…"
+          placeholder={placeholder}
           rows={1}
           disabled={disabled}
           aria-label="Your response"

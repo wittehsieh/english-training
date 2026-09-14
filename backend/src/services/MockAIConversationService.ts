@@ -2,7 +2,9 @@ import phrasePatternsJson from '../data/curriculum/phrasePatterns.json';
 import type {
   AiTurnResult,
   CharacterEmotion,
+  ChunkDiscovery,
   EvaluateContext,
+  RetrievalEvaluation,
   GapPriority,
   GapType,
   LanguageGapObservation,
@@ -10,6 +12,12 @@ import type {
 } from '../types';
 import type { AIConversationService } from './AIConversationService';
 import { conceptKey, scoreTurn } from '../lib/turnScoring';
+import {
+  evaluateProduction,
+  getLibraryChunk,
+  mockSituationFor,
+  routeChunk,
+} from '../lib/mockRetrieval';
 
 /* ==========================================================================
  * MockAIConversationService
@@ -223,14 +231,61 @@ export class MockAIConversationService implements AIConversationService {
       text = `${ack} ${follow}`;
     }
 
+    // ---- retrieval evaluation (only when answering a retrieval prompt) ----
+    const retrievalEvaluation: RetrievalEvaluation | null = context.retrieval
+      ? evaluateProduction(
+          playerMessage,
+          context.retrieval.targetPhrase,
+          context.retrieval.targetPattern,
+        )
+      : null;
+
+    // ---- chunk discovery -------------------------------------------------
+    // Never proposed mid-retrieval: one learning thread at a time.
+    let discovery: ChunkDiscovery | null = null;
+    const discovered = scored.gap;
+    if (discovered && !context.retrieval) {
+      // A chunk must be a REUSABLE PATTERN, never the player's whole corrected
+      // sentence — so prefer the library entry the rule points at.
+      const library = rule?.patternId ? getLibraryChunk(rule.patternId) : undefined;
+      const route = routeChunk(`${discovered.concept} ${discovered.betterExpression}`);
+      discovery = library
+        ? {
+            phrase: library.phrase,
+            pattern: library.pattern ?? discovered.concept,
+            meaning: library.meaning,
+            usage: library.usage ?? discovered.userIntent ?? '',
+            category: library.category,
+            skill: library.skill,
+            situationPrompt: mockSituationFor(library.skill, playerTurnNumber),
+          }
+        : {
+            phrase: discovered.concept,
+            pattern: discovered.concept,
+            meaning: discovered.explanation || discovered.userIntent || discovered.concept,
+            usage: discovered.userIntent || '',
+            category: route.category,
+            skill: route.skill,
+            situationPrompt: mockSituationFor(route.skill, playerTurnNumber),
+          };
+    }
+
     return {
-      characterResponse: { text, emotion },
+      characterResponse: {
+        text:
+          retrievalEvaluation?.usedTargetPattern
+            ? 'Yeah, exactly like that. Anyway —'
+            : text,
+        emotion,
+      },
       evaluation: scored.evaluation,
       analysis: { ...analysis, gap: scored.gap },
       learning: scored.learning,
       objectiveProgress: scored.objectiveProgress,
       lessonComplete: scored.lessonComplete,
       xpEarned: scored.xpEarned,
+      discovery,
+      retrievalEvaluation,
     };
   }
 }

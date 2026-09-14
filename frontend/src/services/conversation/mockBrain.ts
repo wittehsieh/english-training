@@ -1,15 +1,24 @@
 import type {
   AiTurnResult,
   CharacterEmotion,
+  ChunkDiscovery,
   GapType,
   GapPriority,
   Lesson,
   LearningFeedback,
   LanguageGapObservation,
   ResponseEvaluation,
+  RetrievalEvaluation,
+  RetrievalRequestContext,
   TurnLanguageAnalysis,
 } from '../../types';
 import { PHRASE_PATTERNS } from '../../data/curriculum';
+import { getLibraryChunk } from '../../data/chunks';
+import {
+  evaluateProduction,
+  mockSituationFor,
+  routeChunk,
+} from './mockRetrieval';
 
 /* ==========================================================================
  * mockBrain — a rule-based stand-in for the future OpenAI evaluator.
@@ -31,6 +40,8 @@ export interface BrainInput {
   playerTurnNumber: number;
   /** gap concepts the player has reached "familiar"/"mastered" on */
   comfortableConcepts: string[];
+  /** set when this message answers a retrieval prompt */
+  retrieval?: RetrievalRequestContext;
 }
 
 interface GapRule {
@@ -297,14 +308,65 @@ export function runMockBrain(input: BrainInput): AiTurnResult {
     text = `${ack} ${follow}`;
   }
 
+  // ---- retrieval evaluation (only when answering a retrieval prompt) ----
+  const retrievalEvaluation: RetrievalEvaluation | null = input.retrieval
+    ? evaluateProduction(
+        playerMessage,
+        input.retrieval.targetPhrase,
+        input.retrieval.targetPattern,
+      )
+    : null;
+
+  // ---- chunk discovery -------------------------------------------------
+  // A gap IS a chunk the player reached for and didn't have. Never proposed
+  // while they're mid-retrieval — one learning thread at a time.
+  let discovery: ChunkDiscovery | null = null;
+  if (gap && !input.retrieval) {
+    // A chunk must be a REUSABLE PATTERN, never the player's whole corrected
+    // sentence — so prefer the library entry the rule points at.
+    const library = rule?.patternId ? getLibraryChunk(rule.patternId) : undefined;
+    const route = routeChunk(`${gap.concept} ${gap.betterExpression}`);
+    discovery = library
+      ? {
+          phrase: library.phrase,
+          pattern: library.pattern ?? gap.concept,
+          meaning: library.meaning,
+          usage: library.usage ?? gap.userIntent ?? '',
+          category: library.category,
+          skill: library.skill,
+          situationPrompt: mockSituationFor(library.skill, playerTurnNumber),
+        }
+      : {
+          phrase: gap.concept,
+          pattern: gap.concept,
+          meaning: gap.explanation || gap.userIntent || gap.concept,
+          usage: gap.userIntent || '',
+          category: route.category,
+          skill: route.skill,
+          situationPrompt: mockSituationFor(route.skill, playerTurnNumber),
+        };
+  }
+
+  // When the player just nailed a retrieval the NPC should react to THAT,
+  // not carry on with an unrelated follow-up question.
+  const responseText =
+    retrievalEvaluation && retrievalEvaluation.usedTargetPattern
+      ? 'Yeah, exactly like that. Anyway —'
+      : text;
+
   return {
-    characterResponse: { text, emotion: emotionFor(overall, lessonComplete) },
+    characterResponse: {
+      text: responseText,
+      emotion: emotionFor(overall, lessonComplete),
+    },
     evaluation,
     analysis,
     learning,
     objectiveProgress,
     lessonComplete,
     xpEarned,
+    discovery,
+    retrievalEvaluation,
   };
 }
 

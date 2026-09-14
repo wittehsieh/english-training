@@ -119,7 +119,7 @@ export class OpenAIConversationService implements AIConversationService {
     model: ModelTurn,
     degraded: boolean,
   ): AiTurnResult {
-    const { analysis, characterResponse, demonstratedObjectiveIds } =
+    const { analysis, characterResponse, demonstratedObjectiveIds, discovery, retrievalEvaluation } =
       normalizeModelTurn(model);
 
     const scored = scoreTurn(context, analysis, {
@@ -138,6 +138,9 @@ export class OpenAIConversationService implements AIConversationService {
       objectiveProgress: scored.objectiveProgress,
       lessonComplete: scored.lessonComplete,
       xpEarned: scored.xpEarned,
+      // Degraded turns must never trigger a learning moment.
+      discovery: degraded ? null : discovery,
+      retrievalEvaluation: degraded ? null : retrievalEvaluation,
     };
   }
 }

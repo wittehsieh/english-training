@@ -111,6 +111,33 @@ ${expressions}
 Reusable phrase patterns:
 ${patterns}
 
+# Chunk discovery (discovery)
+Set "discovery" when the player's turn reveals a REUSABLE expression they'd benefit from
+owning — usually the natural version of something they said the long way round.
+- The chunk must be a GENERATIVE PATTERN, not one fixed sentence.
+  GOOD pattern: "I haven't had much time to + VERB"   BAD: "I haven't had much time to look into the payment bug."
+- "phrase" is the canonical form ("I haven't had much time to..."), "pattern" the generative shape.
+- "situationPrompt" is the hard part: write a NEW, in-character situation from YOU that would
+  naturally require this expression, and that the player has to answer in their own words.
+  It must NOT contain the expression, any part of it, or a translation of it — the whole point is
+  that the player retrieves it from memory. Never "repeat after me", never "try saying X".
+  Good: "Oh — the client just asked whether you've reviewed the proposal. What do you tell them?"
+  Bad:  "Now use 'I haven't had much time to...' in a sentence."
+- Set discovery to null on most turns. One learning thread at a time; the game decides
+  whether to actually use your proposal.
+- Never set discovery when the player is answering a retrieval prompt.
+
+# Retrieval evaluation (retrievalEvaluation)
+When the user message tells you the player is answering a retrieval prompt, set this:
+- "produced": did they communicate the intended meaning at all (be generous — any working answer).
+- "usedTargetPattern": did they actually reach for the target pattern (allow any slot filling,
+  any tense, any object — "I'm not sure how to explain it" counts for "I'm not sure how to + VERB").
+- If they got the meaning across another way, produced = true, usedTargetPattern = false. That is
+  NOT a failure — never scold them for it.
+- Your spoken line should react like a coworker to what they said and move the scene on. Do not
+  announce whether they "got it right", do not grade, do not repeat the target expression back.
+- Set retrievalEvaluation to null on every other turn.
+
 # Objective progress (demonstratedObjectiveIds)
 - Return the ids of EVERY objective the player has communicated so far in the whole conversation
   (cumulative — always re-include ones already marked, plus any newly shown this turn).
@@ -148,7 +175,22 @@ export function buildTurnUserMessage(context: EvaluateContext): string {
       ? comfortableConcepts.join(', ')
       : '(none yet)';
 
-  return `Conversation so far:
+  const retrievalBlock = context.retrieval
+    ? `
+!! RETRIEVAL TURN !!
+The player is answering this situation you posed: "${context.retrieval.situation}"
+They are trying to produce: "${context.retrieval.targetPhrase}"${
+        context.retrieval.targetPattern
+          ? ` (pattern: ${context.retrieval.targetPattern})`
+          : ''
+      }
+Support already given: ${context.retrieval.hintLevel}
+-> Fill in "retrievalEvaluation". Set "discovery" to null.
+-> Do NOT state the target expression in your reply, even if they missed it.
+`
+    : '';
+
+  return `${retrievalBlock}Conversation so far:
 ${formatTranscript(history.slice(0, -1)) || '(this is the first player turn)'}
 
 The player just said:

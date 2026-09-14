@@ -21,6 +21,8 @@ const validTurn: ModelTurn = {
     patternsUsedNaturally: ['working-on'],
   },
   demonstratedObjectiveIds: ['describe_progress'],
+  discovery: null,
+  retrievalEvaluation: null,
 };
 
 test('10a. valid structured output passes validation', () => {

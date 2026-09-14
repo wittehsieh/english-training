@@ -141,6 +141,7 @@ conversationRouter.post(
         comfortableConcepts: Array.isArray(body.comfortableConcepts)
           ? body.comfortableConcepts
           : [],
+        ...(body.retrieval ? { retrieval: body.retrieval } : {}),
       });
 
       const characterTurn: ConversationTurn = {

@@ -5,8 +5,15 @@ import { VisualNovelScene } from '../components/visual-novel/Scene';
 import { DialogueBox } from '../components/visual-novel/DialogueBox';
 import { PlayerInput } from '../components/visual-novel/PlayerInput';
 import { LearningFeedback } from '../components/visual-novel/LearningFeedback';
+import { ChunkDiscovery } from '../components/visual-novel/ChunkDiscovery';
+import { RetrievalBar } from '../components/visual-novel/RetrievalBar';
 import { getCharacter, getLesson } from '../data/lessons';
-import { useConversation, type LessonSummary } from '../engine/useConversation';
+import {
+  useConversation,
+  type ConversationHooks,
+  type LessonSummary,
+} from '../engine/useConversation';
+import { recordEncounter } from '../engine/mastery/chunkMastery';
 import { usePlayer } from '../state/PlayerContext';
 import type { CharacterExpression, TurnLanguageAnalysis } from '../types';
 
@@ -14,9 +21,43 @@ export function ConversationPage() {
   const { lessonId = '' } = useParams();
   const lesson = getLesson(lessonId);
   const navigate = useNavigate();
-  const { profile, comfortableConcepts, observeTurn, completeLesson } = usePlayer();
+  const {
+    profile,
+    comfortableConcepts,
+    observeTurn,
+    completeLesson,
+    getMastery,
+    allChunks,
+    recordRetrievalAttempt,
+  } = usePlayer();
 
   if (!lesson) return <Navigate to="/lessons" replace />;
+
+  const hooks: ConversationHooks = {
+    masteryFor: getMastery,
+    chunkFor: (phrase) =>
+      allChunks.find(
+        (c) => c.phrase.toLowerCase().trim() === phrase.toLowerCase().trim(),
+      ),
+    onRetrievalResolved: (chunkId, evidence, chunk) => {
+      recordRetrievalAttempt(chunkId, evidence, chunk);
+    },
+    onChunkEncountered: (chunk) => {
+      // Meeting the expression starts its review clock but earns no mastery.
+      recordRetrievalAttempt(
+        chunk.id,
+        {
+          at: new Date().toISOString(),
+          stage: 'prompted',
+          hintLevel: 'full_answer',
+          outcome: 'failed',
+          lessonId: lesson.id,
+        },
+        chunk,
+      );
+      void recordEncounter;
+    },
+  };
 
   return (
     <ConversationScreen
@@ -25,6 +66,7 @@ export function ConversationPage() {
       hintsEnabled={profile.settings.showLearningHints}
       reducedMotion={profile.settings.reducedMotion}
       comfortableConcepts={comfortableConcepts}
+      hooks={hooks}
       onObserveTurn={(analysis) => observeTurn(analysis, lesson.id)}
       onExit={() => navigate('/lessons')}
       onComplete={(summary) => {
@@ -45,6 +87,7 @@ interface ScreenProps {
   hintsEnabled: boolean;
   reducedMotion: boolean;
   comfortableConcepts: string[];
+  hooks: ConversationHooks;
   onObserveTurn: (analysis: TurnLanguageAnalysis) => void;
   onExit: () => void;
   onComplete: (summary: LessonSummary) => void;
@@ -55,13 +98,26 @@ function ConversationScreen({
   hintsEnabled,
   reducedMotion,
   comfortableConcepts,
+  hooks,
   onObserveTurn,
   onExit,
   onComplete,
 }: ScreenProps) {
   const lesson = getLesson(lessonId)!;
-  const { phase, error, state, progress, lastResult, summary, send } =
-    useConversation(lesson, comfortableConcepts);
+  const {
+    phase,
+    error,
+    state,
+    progress,
+    lastResult,
+    summary,
+    send,
+    pendingDiscovery,
+    acknowledgeDiscovery,
+    retrieval,
+    hint,
+    requestHint,
+  } = useConversation(lesson, comfortableConcepts, hooks);
   const [showHint, setShowHint] = useState(false);
   const completedRef = useRef(false);
   const observedRef = useRef<string | null>(null);
@@ -186,12 +242,21 @@ function ConversationScreen({
         waiting={phase === 'sending'}
         reducedMotion={reducedMotion}
         hint={
-          hintsEnabled && lastTurn?.speaker === 'character'
+          // While retrieving, the lesson's target-expression nudge would give
+          // the game away — the RetrievalBar owns hinting instead.
+          hintsEnabled && !retrieval && !pendingDiscovery && lastTurn?.speaker === 'character'
             ? hintExpression?.text
             : undefined
         }
       >
-        {lastResult ? (
+        {pendingDiscovery ? (
+          <ChunkDiscovery
+            chunk={pendingDiscovery.chunk}
+            onContinue={acknowledgeDiscovery}
+          />
+        ) : null}
+
+        {!pendingDiscovery && !retrieval && lastResult ? (
           <LearningFeedback
             feedback={lastResult.learning}
             gap={lastResult.analysis.gap}
@@ -199,17 +264,31 @@ function ConversationScreen({
           />
         ) : null}
 
+        {retrieval ? (
+          <RetrievalBar hint={hint} onHint={requestHint} disabled={busy} />
+        ) : null}
+
         {error ? <div className="banner banner--error">{error}</div> : null}
 
-        <PlayerInput
-          disabled={busy}
-          onSend={(message) => {
-            setShowHint(false);
-            void send(message);
-          }}
-          onHint={() => setShowHint((v) => !v)}
-          suggestion={showHint ? (hintExpression?.text ?? null) : null}
-        />
+        {/* While the discovery card is up, the only action is "Got it". */}
+        {pendingDiscovery ? null : (
+          <PlayerInput
+            disabled={busy}
+            placeholder={
+              retrieval ? 'Say it your own way…' : 'Type your response in English…'
+            }
+            onSend={(message) => {
+              setShowHint(false);
+              void send(message);
+            }}
+            {...(retrieval
+              ? {}
+              : {
+                  onHint: () => setShowHint((v) => !v),
+                  suggestion: showHint ? (hintExpression?.text ?? null) : null,
+                })}
+          />
+        )}
       </DialogueBox>
     </div>
   );

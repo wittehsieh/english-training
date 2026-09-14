@@ -102,6 +102,7 @@ export class MockConversationService implements ConversationService {
       completedObjectiveIds: convo.completedObjectiveIds,
       playerTurnNumber: convo.playerTurns,
       comfortableConcepts: request.comfortableConcepts ?? [],
+      ...(request.retrieval ? { retrieval: request.retrieval } : {}),
     });
 
     convo.completedObjectiveIds = Object.entries(result.objectiveProgress)
